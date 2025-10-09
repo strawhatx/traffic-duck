@@ -18,12 +18,12 @@ const WaitlistForm = () => {
     <section id="waitlist" className="py-24 px-4 bg-gradient-to-b from-muted/30 to-background">
       <div className="max-w-2xl mx-auto text-center space-y-8">
         <h2 className="text-4xl md:text-5xl font-heading font-bold tracking-tight">
-          Be the first to improve your content with{" "}
-          <span className="text-secondary">Traffic Duck</span>
+          Join <span className="text-primary">500+ creators</span> waiting for{" "}
+          <span className="text-secondary">early access</span>
         </h2>
         
         <p className="text-lg text-muted-foreground">
-          No spam — just early access updates
+          Get lifetime early bird pricing when we launch — plus first priority for support
         </p>
 
         <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-4 max-w-lg mx-auto mt-8">

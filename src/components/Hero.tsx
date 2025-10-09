@@ -27,14 +27,25 @@ const Hero = () => {
         </div>
         
         <h1 className="text-5xl md:text-6xl lg:text-7xl font-heading font-bold tracking-tight leading-tight">
-          Optimize your content for{" "}
-          <span className="text-primary">higher SEO rankings</span>
+          Stop losing traffic to{" "}
+          <span className="text-primary">better-optimized content</span>
         </h1>
         
         <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-          Traffic Duck analyzes your posts, identifies SEO opportunities, and suggests 
-          actionable improvements — instantly.
+          Traffic Duck finds exactly what's holding your content back from ranking — and tells you how to fix it in seconds.
         </p>
+        
+        <div className="flex flex-wrap justify-center gap-6 text-sm text-muted-foreground mb-4">
+          <div className="flex items-center gap-2">
+            <span className="text-primary font-semibold">✓</span> No SEO expertise needed
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-primary font-semibold">✓</span> Works with any content
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-primary font-semibold">✓</span> Instant results
+          </div>
+        </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto mt-8">
           <Input

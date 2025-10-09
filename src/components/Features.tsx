@@ -3,23 +3,23 @@ import { Key, TrendingUp, Lightbulb, Zap } from "lucide-react";
 const features = [
   {
     icon: Key,
-    title: "Keyword Optimization",
-    description: "Identify the best keywords to boost ranking",
+    title: "Find Missing Keywords",
+    description: "Discover high-impact keywords your competitors are ranking for — but you're not using yet",
   },
   {
     icon: TrendingUp,
-    title: "SEO Score",
-    description: "Measure content performance and potential",
+    title: "Get Your SEO Score",
+    description: "See exactly where you stand and what's keeping you from page one rankings",
   },
   {
     icon: Lightbulb,
-    title: "Content Suggestions",
-    description: "Get actionable tips to improve posts",
+    title: "Actionable Fixes",
+    description: "No vague advice — get specific improvements you can implement in minutes",
   },
   {
     icon: Zap,
-    title: "Quick & Easy",
-    description: "Optimize your content in seconds, no manual work",
+    title: "Instant Analysis",
+    description: "Paste your content, get results in seconds. No complex tools or hours of research",
   },
 ];
 
