@@ -6,14 +6,17 @@ import { toast } from "sonner";
 
 type ViewState = "input" | "email" | "loading" | "result";
 
-const CHANNELS = ["Twitter/X", "LinkedIn", "Instagram Reels", "YouTube Shorts", "TikTok", "Reddit", "Facebook"];
-const TIMES = ["9:00 AM EST", "12:00 PM EST", "3:00 PM EST", "6:00 PM EST", "8:00 PM EST", "10:00 AM PST", "2:00 PM PST"];
+const PLACEHOLDER_RESULTS = {
+  reddit: ["r/Placeholder1", "r/Placeholder2", "r/Placeholder3"],
+  facebookGroups: ["FB Group Placeholder A", "FB Group Placeholder B"],
+  communities: ["Discord Community Placeholder 1", "Niche Forum Placeholder 2"],
+  newsletters: ["Newsletter Placeholder One"]
+};
 
 const ValidationTool = () => {
   const [url, setUrl] = useState("");
   const [email, setEmail] = useState("");
   const [viewState, setViewState] = useState<ViewState>("input");
-  const [result, setResult] = useState({ channel: "", time: "" });
 
   const handleUrlSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,11 +30,7 @@ const ValidationTool = () => {
 
     setViewState("loading");
 
-    // Simulate analysis with 2 second delay
     setTimeout(() => {
-      const randomChannel = CHANNELS[Math.floor(Math.random() * CHANNELS.length)];
-      const randomTime = TIMES[Math.floor(Math.random() * TIMES.length)];
-      setResult({ channel: randomChannel, time: randomTime });
       setViewState("result");
       toast.success("Recommendations sent to your email! 🦆");
     }, 2000);
@@ -41,7 +40,6 @@ const ValidationTool = () => {
     setUrl("");
     setEmail("");
     setViewState("input");
-    setResult({ channel: "", time: "" });
   };
 
   return (
@@ -54,7 +52,7 @@ const ValidationTool = () => {
             Where Should You Post This?
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto">
-            TrafficDuck tells you the best channel for maximum reach.
+            TrafficDuck finds the best communities and channels to share your content for maximum reach.
           </p>
         </div>
 
@@ -74,7 +72,7 @@ const ValidationTool = () => {
                 type="submit"
                 className="h-14 px-8 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-lg hover:shadow-xl transition-all"
               >
-                Find My Best Channel
+                Find My Channels
               </Button>
             </div>
           </form>
@@ -90,7 +88,7 @@ const ValidationTool = () => {
                     Where should we send your recommendations?
                   </h2>
                   <p className="text-muted-foreground">
-                    We'll email you a copy plus a follow-up with more insights tomorrow.
+                    We'll email you a copy plus a follow-up with more channel ideas tomorrow.
                   </p>
                 </div>
 
@@ -107,7 +105,7 @@ const ValidationTool = () => {
                     type="submit"
                     className="w-full h-14 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-lg hover:shadow-xl transition-all text-lg"
                   >
-                    Get My Results
+                    Get My Channels
                   </Button>
                 </form>
 
@@ -131,7 +129,7 @@ const ValidationTool = () => {
                   <div className="relative">
                     <span className="text-5xl animate-bounce">🦆</span>
                   </div>
-                  <p className="text-lg font-medium text-foreground">Analyzing your content…</p>
+                  <p className="text-lg font-medium text-foreground">Finding the best communities for your content…</p>
                   <div className="flex gap-1">
                     <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></span>
                     <span className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></span>
@@ -150,38 +148,74 @@ const ValidationTool = () => {
               <CardContent className="p-8 space-y-6">
                 <div className="space-y-2">
                   <h2 className="text-2xl font-heading font-bold text-foreground">
-                    Your Best Posting Strategy
+                    Your Recommended Channels
                   </h2>
-                  <p className="text-sm text-muted-foreground">
-                    A copy has been sent to {email}
-                  </p>
                   <div className="w-12 h-1 bg-primary mx-auto rounded-full"></div>
                 </div>
 
                 <div className="space-y-4 text-left">
+                  {/* Reddit */}
                   <div className="p-4 bg-muted rounded-xl">
-                    <p className="text-sm text-muted-foreground mb-1">Best channel</p>
-                    <p className="text-xl font-semibold text-foreground">{result.channel}</p>
+                    <p className="text-sm font-semibold text-primary mb-2">Reddit</p>
+                    <ul className="space-y-1">
+                      {PLACEHOLDER_RESULTS.reddit.map((sub, i) => (
+                        <li key={i} className="text-foreground">{sub}</li>
+                      ))}
+                    </ul>
                   </div>
+
+                  {/* Facebook Groups */}
                   <div className="p-4 bg-muted rounded-xl">
-                    <p className="text-sm text-muted-foreground mb-1">Best time</p>
-                    <p className="text-xl font-semibold text-foreground">{result.time}</p>
+                    <p className="text-sm font-semibold text-primary mb-2">Facebook Groups</p>
+                    <ul className="space-y-1">
+                      {PLACEHOLDER_RESULTS.facebookGroups.map((group, i) => (
+                        <li key={i} className="text-foreground">{group}</li>
+                      ))}
+                    </ul>
                   </div>
+
+                  {/* Communities */}
+                  <div className="p-4 bg-muted rounded-xl">
+                    <p className="text-sm font-semibold text-primary mb-2">Communities</p>
+                    <ul className="space-y-1">
+                      {PLACEHOLDER_RESULTS.communities.map((community, i) => (
+                        <li key={i} className="text-foreground">{community}</li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Newsletters */}
+                  <div className="p-4 bg-muted rounded-xl">
+                    <p className="text-sm font-semibold text-primary mb-2">Newsletters</p>
+                    <ul className="space-y-1">
+                      {PLACEHOLDER_RESULTS.newsletters.map((newsletter, i) => (
+                        <li key={i} className="text-foreground">{newsletter}</li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Why These Work */}
                   <div className="p-4 bg-primary/10 rounded-xl border border-primary/20">
-                    <p className="text-sm text-muted-foreground mb-1">Why this works</p>
-                    <p className="text-foreground">Your content performs best with this style of audience.</p>
+                    <p className="text-sm font-semibold text-primary mb-1">Why These Channels Work</p>
+                    <p className="text-foreground text-sm">
+                      Your content matches the audience interests inside these communities.
+                      <span className="block text-muted-foreground text-xs mt-1">(This is a placeholder — real logic will be applied later.)</span>
+                    </p>
                   </div>
                 </div>
 
-                <div className="p-4 bg-muted/50 rounded-xl border border-border">
-                  <p className="text-sm text-muted-foreground">
-                    📬 Check your inbox tomorrow — we'll send you deeper insights about your content strategy.
+                {/* Email Confirmation */}
+                <div className="p-4 bg-muted/50 rounded-xl border border-border text-center">
+                  <p className="text-sm text-foreground font-medium">📬 Check your email</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    A copy has been sent to {email}
                   </p>
                 </div>
 
+                {/* CTA */}
                 <div className="pt-4 space-y-4 border-t border-border">
                   <p className="text-lg font-medium text-foreground">
-                    Want TrafficDuck to auto-post for you?
+                    Want early access to advanced channel discovery?
                   </p>
                   <Button 
                     className="w-full h-14 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-lg hover:shadow-xl transition-all text-lg"
