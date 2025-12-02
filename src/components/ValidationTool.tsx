@@ -2,37 +2,44 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import EmailModal from "./EmailModal";
+import { toast } from "sonner";
 
-type ViewState = "input" | "loading" | "result";
+type ViewState = "input" | "email" | "loading" | "result";
 
 const CHANNELS = ["Twitter/X", "LinkedIn", "Instagram Reels", "YouTube Shorts", "TikTok", "Reddit", "Facebook"];
 const TIMES = ["9:00 AM EST", "12:00 PM EST", "3:00 PM EST", "6:00 PM EST", "8:00 PM EST", "10:00 AM PST", "2:00 PM PST"];
 
 const ValidationTool = () => {
   const [url, setUrl] = useState("");
+  const [email, setEmail] = useState("");
   const [viewState, setViewState] = useState<ViewState>("input");
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [result, setResult] = useState({ channel: "", time: "" });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleUrlSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!url.trim()) return;
+    setViewState("email");
+  };
+
+  const handleEmailSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim()) return;
 
     setViewState("loading");
 
     // Simulate analysis with 2 second delay
     setTimeout(() => {
-      // Random placeholders
       const randomChannel = CHANNELS[Math.floor(Math.random() * CHANNELS.length)];
       const randomTime = TIMES[Math.floor(Math.random() * TIMES.length)];
       setResult({ channel: randomChannel, time: randomTime });
       setViewState("result");
+      toast.success("Recommendations sent to your email! 🦆");
     }, 2000);
   };
 
   const handleReset = () => {
     setUrl("");
+    setEmail("");
     setViewState("input");
     setResult({ channel: "", time: "" });
   };
@@ -51,9 +58,9 @@ const ValidationTool = () => {
           </p>
         </div>
 
-        {/* Input State */}
+        {/* Step 1: URL Input */}
         {viewState === "input" && (
-          <form onSubmit={handleSubmit} className="space-y-4 animate-fade-in">
+          <form onSubmit={handleUrlSubmit} className="space-y-4 animate-fade-in">
             <div className="flex flex-col sm:flex-row gap-3 max-w-lg mx-auto">
               <Input
                 type="url"
@@ -73,7 +80,49 @@ const ValidationTool = () => {
           </form>
         )}
 
-        {/* Loading State */}
+        {/* Step 2: Email Collection */}
+        {viewState === "email" && (
+          <div className="space-y-6 animate-fade-in">
+            <Card className="max-w-lg mx-auto border-2 border-border bg-card">
+              <CardContent className="p-8 space-y-6">
+                <div className="space-y-2">
+                  <h2 className="text-2xl font-heading font-bold text-foreground">
+                    Where should we send your recommendations?
+                  </h2>
+                  <p className="text-muted-foreground">
+                    We'll email you a copy plus a follow-up with more insights tomorrow.
+                  </p>
+                </div>
+
+                <form onSubmit={handleEmailSubmit} className="space-y-4">
+                  <Input
+                    type="email"
+                    placeholder="your@email.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    className="h-14 rounded-xl border-2 border-border px-5 text-base focus:border-primary bg-background transition-colors"
+                  />
+                  <Button 
+                    type="submit"
+                    className="w-full h-14 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-lg hover:shadow-xl transition-all text-lg"
+                  >
+                    Get My Results
+                  </Button>
+                </form>
+
+                <button 
+                  onClick={() => setViewState("input")}
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  ← Back
+                </button>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Step 3: Loading State */}
         {viewState === "loading" && (
           <div className="space-y-6 animate-fade-in">
             <Card className="max-w-lg mx-auto border-2 border-border bg-card">
@@ -94,7 +143,7 @@ const ValidationTool = () => {
           </div>
         )}
 
-        {/* Result State */}
+        {/* Step 4: Result State */}
         {viewState === "result" && (
           <div className="space-y-6 animate-fade-in">
             <Card className="max-w-lg mx-auto border-2 border-primary/30 bg-card shadow-xl">
@@ -103,6 +152,9 @@ const ValidationTool = () => {
                   <h2 className="text-2xl font-heading font-bold text-foreground">
                     Your Best Posting Strategy
                   </h2>
+                  <p className="text-sm text-muted-foreground">
+                    A copy has been sent to {email}
+                  </p>
                   <div className="w-12 h-1 bg-primary mx-auto rounded-full"></div>
                 </div>
 
@@ -121,15 +173,20 @@ const ValidationTool = () => {
                   </div>
                 </div>
 
+                <div className="p-4 bg-muted/50 rounded-xl border border-border">
+                  <p className="text-sm text-muted-foreground">
+                    📬 Check your inbox tomorrow — we'll send you deeper insights about your content strategy.
+                  </p>
+                </div>
+
                 <div className="pt-4 space-y-4 border-t border-border">
                   <p className="text-lg font-medium text-foreground">
-                    Want this done automatically next time?
+                    Want TrafficDuck to auto-post for you?
                   </p>
                   <Button 
-                    onClick={() => setIsModalOpen(true)}
                     className="w-full h-14 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-lg hover:shadow-xl transition-all text-lg"
                   >
-                    Get Early Access
+                    Join the Waitlist
                   </Button>
                 </div>
               </CardContent>
@@ -143,8 +200,6 @@ const ValidationTool = () => {
             </button>
           </div>
         )}
-
-        <EmailModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
       </div>
     </section>
   );
