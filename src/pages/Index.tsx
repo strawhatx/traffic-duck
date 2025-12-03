@@ -1,11 +1,7 @@
-import ValidationTool from "@/components/ValidationTool";
+import LandingPage from "@/components/LandingPage";
 
 const Index = () => {
-  return (
-    <main className="min-h-screen bg-background">
-      <ValidationTool />
-    </main>
-  );
+  return <LandingPage />;
 };
 
 export default Index;
