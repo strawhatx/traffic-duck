@@ -64,10 +64,12 @@ const LandingPage = () => {
           {/* Step 1: URL Input */}
           {viewState === "input" && (
             <div className="space-y-4 animate-fade-in">
-              <form onSubmit={handleUrlSubmit} className="space-y-4">
+              <form onSubmit={handleUrlSubmit} className="space-y-4" name="url-submission" data-netlify="true">
+                <input type="hidden" name="form-name" value="url-submission" />
                 <div className="flex flex-col sm:flex-row gap-3 max-w-lg mx-auto">
                   <Input
                     type="url"
+                    name="url"
                     placeholder="Paste your link here…"
                     value={url}
                     onChange={(e) => setUrl(e.target.value)}
@@ -109,9 +111,12 @@ const LandingPage = () => {
                     </p>
                   </div>
 
-                  <form onSubmit={handleEmailSubmit} className="space-y-4">
+                  <form onSubmit={handleEmailSubmit} className="space-y-4" name="email-submission" data-netlify="true">
+                    <input type="hidden" name="form-name" value="email-submission" />
+                    <input type="hidden" name="url" value={url} />
                     <Input
                       type="email"
+                      name="email"
                       placeholder="your@email.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
