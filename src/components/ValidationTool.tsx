@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import duckMascot from "@/assets/duck-mascot.png";
 
 type ViewState = "input" | "email" | "loading" | "result";
 
@@ -48,7 +47,7 @@ const ValidationTool = () => {
       <div className="max-w-2xl w-full mx-auto text-center space-y-8">
         {/* Hero */}
         <div className="space-y-4 animate-fade-in">
-          <img src={duckMascot} alt="Traffic Duck" className="w-24 h-24 mx-auto" />
+          <span className="text-4xl">🦆</span>
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-heading font-bold tracking-tight text-foreground">
             Where Should You Post This?
           </h1>
