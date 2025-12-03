@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
+import logo from "@/assets/duck-mascot.png";
 
 type ViewState = "input" | "email" | "loading" | "result";
 
@@ -73,7 +74,7 @@ const LandingPage = () => {
       <section className="min-h-screen flex items-center justify-center px-4 py-20">
         <div className="max-w-2xl w-full mx-auto text-center space-y-8">
           <div className="space-y-4 animate-fade-in">
-            <span className="text-5xl">🦆</span>
+            <img src={logo} alt="TrafficDuck" className="w-24 h-24 mx-auto" />
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-heading font-bold tracking-tight text-foreground">
               Where should you post your content to get traffic?
             </h1>
