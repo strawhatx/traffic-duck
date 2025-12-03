@@ -23,6 +23,13 @@
 
   <body>
     <div id="root"></div>
+    <!-- Hidden Netlify form to register with the build bot -->
+    <form name="email-submission" data-netlify="true" netlify-honeypot="bot-field" method="POST" hidden>
+      <input type="text" name="bot-field" />
+      <input type="hidden" name="form-name" value="email-submission" />
+      <input type="email" name="email" />
+      <input type="text" name="url" />
+    </form>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -18,22 +18,43 @@ const LandingPage = () => {
   const [email, setEmail] = useState("");
   const [viewState, setViewState] = useState<ViewState>("input");
 
+  const encode = (data: Record<string, string>) =>
+    Object.keys(data)
+      .map((key) => encodeURIComponent(key) + "=" + encodeURIComponent(data[key]))
+      .join("&");
+
   const handleUrlSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!url.trim()) return;
     setViewState("email");
   };
 
-  const handleEmailSubmit = (e: React.FormEvent) => {
+  const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) return;
 
     setViewState("loading");
 
-    setTimeout(() => {
+    try {
+      const formData = {
+        "form-name": "email-submission",
+        email,
+        url
+      };
+      const response = await fetch("/", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: encode(formData)
+      });
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
       setViewState("result");
-      toast.success("Recommendations sent to your email! 🦆");
-    }, 2000);
+      toast.success("Thanks! We received your signup. 🦆");
+    } catch (err) {
+      setViewState("email");
+      toast.error("Sorry, something went wrong submitting the form.");
+    }
   };
 
   const handleReset = () => {
