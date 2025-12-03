@@ -51,7 +51,7 @@ const LandingPage = () => {
         throw new Error("Network response was not ok");
       }
       setViewState("result");
-      toast.success("Thanks! We received your signup. 🦆");
+      toast.success("Thanks! We received your request. 🦆");
     } catch (err) {
       setViewState("email");
       toast.error("Sorry, something went wrong submitting the form.");
