@@ -53,6 +53,17 @@
       <input type="email" name="email" />
       <input type="text" name="url" />
     </form>
+    <!-- Hidden Netlify form for waitlist intent capture -->
+    <form name="waitlist-intent" data-netlify="true" netlify-honeypot="bot-field" method="POST" hidden>
+      <input type="text" name="bot-field" />
+      <input type="hidden" name="form-name" value="waitlist-intent" />
+      <input type="email" name="email" />
+      <input type="text" name="niche" />
+      <input type="text" name="audience" />
+      <input type="text" name="goal" />
+      <input type="text" name="platforms" />
+      <input type="number" name="urgency" />
+    </form>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
