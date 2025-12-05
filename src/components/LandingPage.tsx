@@ -440,13 +440,13 @@ const LandingPage = () => {
             onClick={scrollToForm}
             className="h-14 px-8 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-lg hover:shadow-xl transition-all"
           >
-            Get Early Access — See Conversations
+            Get Early Access — Join Waitlist
           </Button>
         </div>
       </section>
 
       {/* Wizard Form */}
-      <section ref={formRef} className="py-16 px-4 bg-muted/30">
+      <section className="py-16 px-4 bg-muted/30">
         <div className="max-w-2xl mx-auto">
           <Card className="border-0 shadow-none bg-transparent">
             <CardContent className="p-8 space-y-6">
@@ -708,16 +708,31 @@ const LandingPage = () => {
       </section>
 
       {/* (F) Bottom CTA Section */}
-      <section className="py-20 px-4">
+      <section ref={formRef} className="py-20 px-4">
         <div className="max-w-lg mx-auto text-center space-y-6">
           <h2 className="text-3xl md:text-4xl font-heading font-bold text-foreground">
             Ready to find your audience?
           </h2>
-          <form onSubmit={handleIntentSubmit} className="space-y-5">
+          <form
+            name="waitlist-intent"
+            method="POST"
+            data-netlify="true"
+            netlify-honeypot="bot-field"
+            onSubmit={handleIntentSubmit}
+            className="space-y-5"
+          >
+            <input type="hidden" name="form-name" value="waitlist-intent" />
+            <input type="text" name="bot-field" className="hidden" />
+            <input type="hidden" name="niche" value={niche} />
+            <input type="hidden" name="audience" value={audience} />
+            <input type="hidden" name="goal" value={goal} />
+            <input type="hidden" name="platforms" value={intentPlatforms.join(",")} />
+            <input type="hidden" name="urgency" value={intentUrgency} />
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">Email</label>
               <Input
                 type="email"
+                name="email"
                 placeholder="you@example.com"
                 value={intentEmail}
                 onChange={(e) => setIntentEmail(e.target.value)}
