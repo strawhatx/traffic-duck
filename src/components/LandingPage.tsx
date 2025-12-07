@@ -10,6 +10,7 @@ import { Slider } from "@/components/ui/slider";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import logo from "@/assets/duck-mascot.png";
+import takaraAvatar from "@/assets/takara-qode.jpg";
 
 type UserGoal = "traffic" | "growth" | "expertise";
 
@@ -727,9 +728,11 @@ const LandingPage = () => {
               
               {/* Attribution */}
               <div className="flex items-center justify-center gap-3 pt-4">
-                <div className="h-12 w-12 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-lg">
-                  TQ
-                </div>
+                <img 
+                  src={takaraAvatar} 
+                  alt="Takara Qode" 
+                  className="h-12 w-12 rounded-full object-cover border-2 border-primary/30"
+                />
                 <div className="text-left">
                   <p className="font-semibold text-foreground">Takara Qode</p>
                   <a 
