@@ -707,6 +707,45 @@ const LandingPage = () => {
         </div>
       </section>
 
+      {/* Testimonial (before Bottom CTA) */}
+      <section className="py-14 px-4">
+        <div className="max-w-4xl mx-auto text-center space-y-8">
+          <div className="space-y-6">
+            <div className="relative max-w-3xl mx-auto">
+              <p className="text-2xl md:text-3xl lg:text-4xl font-heading tracking-tight text-foreground">
+                TrafficDuck has been{" "}
+                <span className="text-primary">invaluable</span> for finding conversations.
+                I highly{" "}
+                <span className="text-primary">recommend it</span> to anyone looking for
+                speed without compromising on quality.
+              </p>
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm font-semibold text-foreground">Takara Qode</p>
+              <p className="text-xs text-muted-foreground">Founder</p>
+            </div>
+            <div className="flex items-center justify-center gap-3">
+              {/* Subtle avatar rail to echo social proof */}
+              {[0,1,2,3,4,5,6,7,8].map((i) => (
+                <div
+                  key={i}
+                  className={`h-10 w-10 rounded-full overflow-hidden border ${
+                    i === 4 ? "border-primary ring-2 ring-primary/40" : "border-border opacity-60"
+                  }`}
+                  style={{ filter: i === 4 ? "none" : "grayscale(100%)" }}
+                >
+                  <img
+                    src={i === 4 ? logo : "/placeholder.svg"}
+                    alt="avatar"
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* (F) Bottom CTA Section */}
       <section ref={formRef} className="py-20 px-4">
         <div className="max-w-lg mx-auto text-center space-y-6">
@@ -784,6 +823,9 @@ const LandingPage = () => {
             >
               {isSubmittingIntent ? "Submitting…" : "Join Waitlist"}
             </Button>
+            <p className="text-xs text-muted-foreground">
+              Get early access — includes FREE weekly audits until the MVP is live.
+            </p>
           </form>
         </div>
       </section>
