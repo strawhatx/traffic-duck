@@ -708,41 +708,42 @@ const LandingPage = () => {
       </section>
 
       {/* Testimonial (before Bottom CTA) */}
-      <section className="py-14 px-4">
-        <div className="max-w-4xl mx-auto text-center space-y-8">
-          <div className="space-y-6">
-            <div className="relative max-w-3xl mx-auto">
-              <p className="text-2xl md:text-3xl lg:text-4xl font-heading tracking-tight text-foreground">
-                TrafficDuck has been{" "}
-                <span className="text-primary">invaluable</span> for finding conversations.
-                I highly{" "}
-                <span className="text-primary">recommend it</span> to anyone looking for
-                speed without compromising on quality.
-              </p>
-            </div>
-            <div className="space-y-1">
-              <p className="text-sm font-semibold text-foreground">Takara Qode</p>
-              <p className="text-xs text-muted-foreground">Founder</p>
-            </div>
-            <div className="flex items-center justify-center gap-3">
-              {/* Subtle avatar rail to echo social proof */}
-              {[0,1,2,3,4,5,6,7,8].map((i) => (
-                <div
-                  key={i}
-                  className={`h-10 w-10 rounded-full overflow-hidden border ${
-                    i === 4 ? "border-primary ring-2 ring-primary/40" : "border-border opacity-60"
-                  }`}
-                  style={{ filter: i === 4 ? "none" : "grayscale(100%)" }}
-                >
-                  <img
-                    src={i === 4 ? logo : "/placeholder.svg"}
-                    alt="avatar"
-                    className="h-full w-full object-cover"
-                  />
+      <section className="py-16 md:py-20 px-4">
+        <div className="max-w-3xl mx-auto">
+          <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-background shadow-xl">
+            <CardContent className="p-8 md:p-12 text-center space-y-6">
+              {/* Quote icon */}
+              <div className="flex justify-center">
+                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <span className="text-3xl text-primary font-serif">"</span>
                 </div>
-              ))}
-            </div>
-          </div>
+              </div>
+              
+              {/* Quote text */}
+              <blockquote className="text-xl md:text-2xl lg:text-3xl font-heading tracking-tight text-foreground leading-relaxed">
+                "The tweets you linked are on point — if your tool can perfectly find enough of these daily{" "}
+                <span className="text-primary font-semibold">I would gladly pay.</span>"
+              </blockquote>
+              
+              {/* Attribution */}
+              <div className="flex items-center justify-center gap-3 pt-4">
+                <div className="h-12 w-12 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-lg">
+                  TQ
+                </div>
+                <div className="text-left">
+                  <p className="font-semibold text-foreground">Takara Qode</p>
+                  <a 
+                    href="https://twitter.com/takaraqode" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-sm text-primary hover:underline"
+                  >
+                    @takaraqode
+                  </a>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </section>
 
@@ -823,9 +824,11 @@ const LandingPage = () => {
             >
               {isSubmittingIntent ? "Submitting…" : "Join Waitlist"}
             </Button>
-            <p className="text-xs text-muted-foreground">
-              Get early access — includes FREE weekly audits until the MVP is live.
-            </p>
+            <div className="bg-primary/10 border border-primary/30 rounded-lg p-3 mt-2">
+              <p className="text-sm font-medium text-primary">
+                🎁 Early access bonus: FREE weekly audits until the MVP is live
+              </p>
+            </div>
           </form>
         </div>
       </section>
