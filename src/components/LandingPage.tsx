@@ -70,6 +70,7 @@ const LandingPage = () => {
   const [openEnhanceKey, setOpenEnhanceKey] = useState<string | null>(null);
   const [intentEmail, setIntentEmail] = useState("");
   const [intentUrl, setIntentUrl] = useState("");
+  const [intentPlatforms, setIntentPlatforms] = useState<string[]>([]);
   const [isSubmittingIntent, setIsSubmittingIntent] = useState(false);
 
   const scrollToTop = () => {
@@ -372,7 +373,8 @@ const LandingPage = () => {
       const payload = {
         "form-name": "waitlist-intent",
         email: intentEmail.trim(),
-        url: intentUrl.trim()
+        url: intentUrl.trim(),
+        platforms: intentPlatforms.join(",")
       };
       const res = await fetch("/", {
         method: "POST",
@@ -383,6 +385,7 @@ const LandingPage = () => {
       toast.success("You're on the waitlist — thanks!");
       setIntentEmail("");
       setIntentUrl("");
+      setIntentPlatforms([]);
     } catch {
       toast.error("Could not submit right now. Please try again.");
     } finally {
@@ -767,6 +770,7 @@ const LandingPage = () => {
           >
             <input type="hidden" name="form-name" value="waitlist-intent" />
             <input type="text" name="bot-field" className="hidden" />
+            <input type="hidden" name="platforms" value={intentPlatforms.join(",")} />
             <div className="space-y-2 text-left">
               <label className="text-sm font-medium text-foreground">Your content URL</label>
               <Input
@@ -790,6 +794,29 @@ const LandingPage = () => {
                 className="h-12 rounded-xl border-2 border-border bg-background"
                 required
               />
+            </div>
+            <div className="space-y-2 text-left">
+              <label className="text-sm font-medium text-foreground">Where do you want traffic from?</label>
+              <div className="flex flex-wrap gap-4 pt-1">
+                {["Twitter / X", "Reddit", "LinkedIn"].map((label) => {
+                  const value = label.toLowerCase().includes("twitter") ? "twitter" : label.toLowerCase();
+                  const checked = intentPlatforms.includes(value);
+                  return (
+                    <label key={value} className="flex items-center gap-2 text-sm text-foreground cursor-pointer">
+                      <Checkbox
+                        checked={checked}
+                        onCheckedChange={(v) => {
+                          const isChecked = v === true;
+                          setIntentPlatforms((prev) =>
+                            isChecked ? [...new Set([...prev, value])] : prev.filter((p) => p !== value)
+                          );
+                        }}
+                      />
+                      {label}
+                    </label>
+                  );
+                })}
+              </div>
             </div>
             <Button
               type="submit"
