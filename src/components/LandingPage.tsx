@@ -69,8 +69,7 @@ const LandingPage = () => {
   const [openGenerateKey, setOpenGenerateKey] = useState<string | null>(null);
   const [openEnhanceKey, setOpenEnhanceKey] = useState<string | null>(null);
   const [intentEmail, setIntentEmail] = useState("");
-  const [intentPlatforms, setIntentPlatforms] = useState<string[]>([]);
-  const [intentUrgency, setIntentUrgency] = useState<number>(3);
+  const [intentUrl, setIntentUrl] = useState("");
   const [isSubmittingIntent, setIsSubmittingIntent] = useState(false);
 
   const scrollToTop = () => {
@@ -360,6 +359,10 @@ const LandingPage = () => {
 
   const handleIntentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!intentUrl.trim()) {
+      toast.error("Please paste your content URL.");
+      return;
+    }
     if (!intentEmail.trim()) {
       toast.error("Please enter your email.");
       return;
@@ -369,11 +372,7 @@ const LandingPage = () => {
       const payload = {
         "form-name": "waitlist-intent",
         email: intentEmail.trim(),
-        niche: niche.trim(),
-        audience: audience.trim(),
-        goal,
-        platforms: intentPlatforms.join(","),
-        urgency: String(intentUrgency)
+        url: intentUrl.trim()
       };
       const res = await fetch("/", {
         method: "POST",
@@ -383,8 +382,7 @@ const LandingPage = () => {
       if (!res.ok) throw new Error("Submit failed");
       toast.success("You're on the waitlist — thanks!");
       setIntentEmail("");
-      setIntentPlatforms([]);
-      setIntentUrgency(3);
+      setIntentUrl("");
     } catch {
       toast.error("Could not submit right now. Please try again.");
     } finally {
@@ -754,25 +752,35 @@ const LandingPage = () => {
       <section ref={formRef} className="py-20 px-4">
         <div className="max-w-lg mx-auto text-center space-y-6">
           <h2 className="text-3xl md:text-4xl font-heading font-bold text-foreground">
-            Ready to find your audience?
+            Get your free distribution audit
           </h2>
+          <p className="text-muted-foreground">
+            Paste your content URL and we'll send you personalized community recommendations.
+          </p>
           <form
             name="waitlist-intent"
             method="POST"
             data-netlify="true"
             netlify-honeypot="bot-field"
             onSubmit={handleIntentSubmit}
-            className="space-y-5"
+            className="space-y-4"
           >
             <input type="hidden" name="form-name" value="waitlist-intent" />
             <input type="text" name="bot-field" className="hidden" />
-            <input type="hidden" name="niche" value={niche} />
-            <input type="hidden" name="audience" value={audience} />
-            <input type="hidden" name="goal" value={goal} />
-            <input type="hidden" name="platforms" value={intentPlatforms.join(",")} />
-            <input type="hidden" name="urgency" value={intentUrgency} />
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Email</label>
+            <div className="space-y-2 text-left">
+              <label className="text-sm font-medium text-foreground">Your content URL</label>
+              <Input
+                type="url"
+                name="url"
+                placeholder="https://your-blog.com/post or twitter.com/you/status/..."
+                value={intentUrl}
+                onChange={(e) => setIntentUrl(e.target.value)}
+                className="h-12 rounded-xl border-2 border-border bg-background"
+                required
+              />
+            </div>
+            <div className="space-y-2 text-left">
+              <label className="text-sm font-medium text-foreground">Your email</label>
               <Input
                 type="email"
                 name="email"
@@ -783,53 +791,16 @@ const LandingPage = () => {
                 required
               />
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Which platform(s) do you want traffic from?</label>
-              <div className="flex flex-wrap gap-4">
-                {["Twitter / X", "Reddit", "LinkedIn"].map((label) => {
-                  const value = label.toLowerCase().includes("twitter") ? "twitter" : label.toLowerCase();
-                  const checked = intentPlatforms.includes(value);
-                  return (
-                    <label key={value} className="flex items-center gap-2 text-sm text-foreground">
-                      <Checkbox
-                        checked={checked}
-                        onCheckedChange={(v) => {
-                          const isChecked = v === true;
-                          setIntentPlatforms((prev) =>
-                            isChecked ? [...new Set([...prev, value])] : prev.filter((p) => p !== value)
-                          );
-                        }}
-                      />
-                      {label}
-                    </label>
-                  );
-                })}
-              </div>
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium text-foreground">How urgently do you need traffic? (1–5)</label>
-                <span className="text-sm text-muted-foreground">{intentUrgency}</span>
-              </div>
-              <Slider
-                value={[intentUrgency]}
-                min={1}
-                max={5}
-                step={1}
-                onValueChange={(v) => setIntentUrgency(v[0] ?? 3)}
-                className="mt-2"
-              />
-            </div>
             <Button
               type="submit"
               disabled={isSubmittingIntent}
               className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-lg hover:shadow-xl transition-all"
             >
-              {isSubmittingIntent ? "Submitting…" : "Join Waitlist"}
+              {isSubmittingIntent ? "Submitting…" : "Get My Free Audit"}
             </Button>
-            <div className="bg-primary/10 border border-primary/30 rounded-lg p-3 mt-2">
+            <div className="bg-primary/10 border border-primary/30 rounded-lg p-3">
               <p className="text-sm font-medium text-primary">
-                🎁 Early access bonus: FREE weekly audits until the MVP is live
+                🎁 Early sign-ups get FREE weekly audits until the MVP is live
               </p>
             </div>
           </form>
