@@ -758,7 +758,7 @@ const LandingPage = () => {
             Get your free distribution audit
           </h2>
           <p className="text-muted-foreground">
-            Paste your content URL and we'll send you personalized community recommendations.
+            Share your website and we'll send you personalized community recommendations.
           </p>
           <form
             name="waitlist-intent"
@@ -772,11 +772,11 @@ const LandingPage = () => {
             <input type="text" name="bot-field" className="hidden" />
             <input type="hidden" name="platforms" value={intentPlatforms.join(",")} />
             <div className="space-y-2 text-left">
-              <label className="text-sm font-medium text-foreground">Your content URL</label>
+              <label className="text-sm font-medium text-foreground">Your website URL</label>
               <Input
                 type="url"
                 name="url"
-                placeholder="https://your-blog.com/post or twitter.com/you/status/..."
+                placeholder="https://yoursite.com"
                 value={intentUrl}
                 onChange={(e) => setIntentUrl(e.target.value)}
                 className="h-12 rounded-xl border-2 border-border bg-background"
