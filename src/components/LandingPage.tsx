@@ -833,6 +833,23 @@ const LandingPage = () => {
           </form>
         </div>
       </section>
+
+      {/* Footer */}
+      <footer className="py-8 px-4 border-t border-border">
+        <div className="max-w-2xl mx-auto text-center">
+          <p className="text-sm text-muted-foreground">
+            Questions or support?{" "}
+            <a
+              href="https://x.com/heynathanielj"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline font-medium"
+            >
+              DM me on X @heynathanielj
+            </a>
+          </p>
+        </div>
+      </footer>
     </div>
   );
 };
