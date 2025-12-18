@@ -1,7 +1,6 @@
+"use client";
 import LandingPage from "@/components/LandingPage";
 
-const Index = () => {
+export default function Home() {
   return <LandingPage />;
-};
-
-export default Index;
+}

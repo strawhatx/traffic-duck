@@ -1,3 +1,4 @@
+"use client";
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,11 +7,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Slider } from "@/components/ui/slider";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import logo from "@/assets/duck-mascot.png";
-import takaraAvatar from "@/assets/takara-qode.jpg";
+const logo = "/duck-mascot.png";
+const takaraAvatar = "/takara-qode.jpg";
 
 type UserGoal = "traffic" | "growth" | "expertise";
 
@@ -353,11 +353,6 @@ const LandingPage = () => {
     }
   };
 
-  const encode = (data: Record<string, string>) =>
-    Object.keys(data)
-      .map((key) => encodeURIComponent(key) + "=" + encodeURIComponent(data[key]))
-      .join("&");
-
   const handleIntentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!intentUrl.trim()) {
@@ -370,19 +365,8 @@ const LandingPage = () => {
     }
     setIsSubmittingIntent(true);
     try {
-      const payload = {
-        "form-name": "waitlist-intent",
-        email: intentEmail.trim(),
-        url: intentUrl.trim(),
-        platforms: intentPlatforms.join(",")
-      };
-      const res = await fetch("/", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: encode(payload)
-      });
-      if (!res.ok) throw new Error("Submit failed");
-      toast.success("You're on the waitlist — thanks!");
+      // Forms are disabled; simulate success for now
+      toast.success("Thanks! We'll be in touch soon.");
       setIntentEmail("");
       setIntentUrl("");
       setIntentPlatforms([]);
@@ -761,15 +745,9 @@ const LandingPage = () => {
             Share your website and we'll send you personalized community recommendations.
           </p>
           <form
-            name="waitlist-intent"
-            method="POST"
-            data-netlify="true"
-            netlify-honeypot="bot-field"
             onSubmit={handleIntentSubmit}
             className="space-y-4"
           >
-            <input type="hidden" name="form-name" value="waitlist-intent" />
-            <input type="text" name="bot-field" className="hidden" />
             <input type="hidden" name="platforms" value={intentPlatforms.join(",")} />
             <div className="space-y-2 text-left">
               <label className="text-sm font-medium text-foreground">Your website URL</label>
