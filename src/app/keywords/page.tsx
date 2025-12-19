@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { Radar, Plus, Trash2, Edit2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -95,24 +94,6 @@ export default function Keywords() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Navigation */}
-      <nav className="border-b bg-white sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex justify-between items-center">
-            <Link href="/" className="flex items-center gap-2">
-              <Radar className="w-8 h-8 text-blue-600" />
-              <span className="text-2xl tracking-tight">Traffic Duck</span>
-            </Link>
-            <div className="flex items-center gap-4">
-              <Link href="/dashboard">
-                <Button variant="ghost">Dashboard</Button>
-              </Link>
-              <Button variant="ghost">Settings</Button>
-            </div>
-          </div>
-        </div>
-      </nav>
-
       {/* Main Content */}
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
@@ -149,81 +130,86 @@ export default function Keywords() {
           </p>
         </div>
 
-        <div className="space-y-3">
-          {keywords.map((keyword) => (
-            <Card key={keyword.id} className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <h3 className="text-lg">{keyword.phrase}</h3>
-                    <Badge variant="outline">
-                      {getPlatformCount(keyword.platforms)} platform
-                      {getPlatformCount(keyword.platforms) !== 1 ? "s" : ""}
-                    </Badge>
+    
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="space-y-3 lg:col-span-2">
+            {keywords.map((keyword) => (
+              <Card key={keyword.id} className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <h3 className="text-lg">{keyword.phrase}</h3>
+                      <Badge variant="outline">
+                        {getPlatformCount(keyword.platforms)} platform
+                        {getPlatformCount(keyword.platforms) !== 1 ? "s" : ""}
+                      </Badge>
+                    </div>
+                    <div className="flex gap-2">
+                      {keyword.platforms.reddit && (
+                        <Badge className="bg-orange-100 text-orange-800">
+                          Reddit
+                        </Badge>
+                      )}
+                      {keyword.platforms.instagram && (
+                        <Badge className="bg-pink-100 text-pink-800">
+                          Instagram
+                        </Badge>
+                      )}
+                      {keyword.platforms.twitter && (
+                        <Badge className="bg-blue-100 text-blue-800">
+                          Twitter
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-sm text-slate-500 mt-2">
+                      Added on {new Date(keyword.createdAt).toLocaleDateString()}
+                    </p>
                   </div>
+
                   <div className="flex gap-2">
-                    {keyword.platforms.reddit && (
-                      <Badge className="bg-orange-100 text-orange-800">
-                        Reddit
-                      </Badge>
-                    )}
-                    {keyword.platforms.instagram && (
-                      <Badge className="bg-pink-100 text-pink-800">
-                        Instagram
-                      </Badge>
-                    )}
-                    {keyword.platforms.twitter && (
-                      <Badge className="bg-blue-100 text-blue-800">
-                        Twitter
-                      </Badge>
-                    )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => openEditDialog(keyword)}
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDelete(keyword.id)}
+                    >
+                      <Trash2 className="w-4 h-4 text-red-600" />
+                    </Button>
                   </div>
-                  <p className="text-sm text-slate-500 mt-2">
-                    Added on {new Date(keyword.createdAt).toLocaleDateString()}
-                  </p>
                 </div>
+              </Card>
+            ))}
 
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => openEditDialog(keyword)}
-                  >
-                    <Edit2 className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleDelete(keyword.id)}
-                  >
-                    <Trash2 className="w-4 h-4 text-red-600" />
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          ))}
+            {keywords.length === 0 && (
+              <Card className="p-12 text-center">
+                <Radar className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                <h3 className="text-lg mb-2">No keywords yet</h3>
+                <p className="text-slate-600 mb-4">
+                  Add your first keyword to start tracking conversations
+                </p>
+              </Card>
+            )}
+          </div>
 
-          {keywords.length === 0 && (
-            <Card className="p-12 text-center">
-              <Radar className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-              <h3 className="text-lg mb-2">No keywords yet</h3>
-              <p className="text-slate-600 mb-4">
-                Add your first keyword to start tracking conversations
-              </p>
+          <div className="lg:col-span-1">
+            {/* Info Card */}
+            <Card className="p-6 bg-blue-50 border-blue-200">
+              <h3 className="text-lg mb-2">💡 Tips for better keyword tracking</h3>
+              <ul className="space-y-2 text-sm text-slate-700">
+                <li>• Use specific phrases like "project management for startups" instead of just "project management"</li>
+                <li>• Include common variations and abbreviations (e.g., "CRM" and "customer relationship management")</li>
+                <li>• Monitor competitor names and product categories relevant to your niche</li>
+                <li>• Keep keywords focused - quality over quantity leads to better results</li>
+              </ul>
             </Card>
-          )}
+          </div>
         </div>
-
-        {/* Info Card */}
-        <Card className="p-6 mt-8 bg-blue-50 border-blue-200">
-          <h3 className="text-lg mb-2">💡 Tips for better keyword tracking</h3>
-          <ul className="space-y-2 text-sm text-slate-700">
-            <li>• Use specific phrases like "project management for startups" instead of just "project management"</li>
-            <li>• Include common variations and abbreviations (e.g., "CRM" and "customer relationship management")</li>
-            <li>• Monitor competitor names and product categories relevant to your niche</li>
-            <li>• Keep keywords focused - quality over quantity leads to better results</li>
-          </ul>
-        </Card>
       </div>
     </div>
   );
