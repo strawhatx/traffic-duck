@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Radar, Plus, Trash2, Edit2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -49,23 +49,25 @@ export default function Keywords() {
   const [dialogInitial, setDialogInitial] = useState<KeywordDraft | undefined>(undefined);
   const [tier, setTier] = useState<SubscriptionTier>("free");
 
-  // Resolve subscription tier for current user
-  useState(() => {
-    (async () => {
+  // Load subscription tier for current user
+  useEffect(() => {
+    let cancelled = false;
+    const init = async () => {
       const { data: userData } = await supabase.auth.getUser();
       const userId = userData?.user?.id;
-      if (!userId) {
-        setTier("free");
-        return;
-      }
+      if (!userId) return;
       const { data: profile } = await supabase
         .from("profiles")
         .select("subscription_status, price_id")
         .eq("id", userId)
         .maybeSingle();
-      setTier(resolveTierFromProfile(profile));
-    })();
-  });
+      if (!cancelled) setTier(resolveTierFromProfile(profile ?? undefined));
+    };
+    init();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleDelete = (id: number) => {
     setKeywords(keywords.filter((k) => k.id !== id));
@@ -127,7 +129,6 @@ export default function Keywords() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Main Content */}
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
