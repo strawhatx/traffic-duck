@@ -14,6 +14,9 @@ export default function AuthCallback() {
       const { data } = await supabase.auth.getSession();
       if (!cancelled) {
         if (data.session) {
+          // Ensure a profile row exists for this user (needed for billing state)
+          const userId = data.session.user.id;
+          await supabase.from("profiles").upsert({ id: userId });
           router.replace("/keywords");
         } else {
           router.replace("/sign-in");

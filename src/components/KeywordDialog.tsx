@@ -31,6 +31,7 @@ interface KeywordDialogProps {
   title?: string;
   submitLabel?: string;
   trigger?: React.ReactNode;
+  allowTwitter?: boolean;
 }
 
 const defaultPlatforms: Platforms = {
@@ -47,6 +48,7 @@ const KeywordDialog: React.FC<KeywordDialogProps> = ({
   title,
   submitLabel,
   trigger,
+  allowTwitter = false,
 }) => {
   const [draft, setDraft] = React.useState<KeywordDraft>({
     phrase: initialValue?.phrase ?? "",
@@ -153,7 +155,7 @@ const KeywordDialog: React.FC<KeywordDialogProps> = ({
                   <div>
                     <p className="font-medium">Twitter / X</p>
                     <p className="text-sm text-slate-600">
-                      Available on Pro plan
+                      {allowTwitter ? "Included on Pro plan" : "Available on Pro plan"}
                     </p>
                   </div>
                 </div>
@@ -165,7 +167,7 @@ const KeywordDialog: React.FC<KeywordDialogProps> = ({
                       platforms: { ...d.platforms, twitter: checked },
                     }))
                   }
-                  disabled
+                  disabled={!allowTwitter}
                 />
               </div>
             </div>

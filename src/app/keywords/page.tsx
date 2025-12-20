@@ -6,6 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import KeywordDialog from "@/components/KeywordDialog";
+import { supabase } from "@/lib/supabaseClient";
+import { resolveTierFromProfile, SubscriptionTier } from "@/lib/subscription";
+import { toast } from "sonner";
 
 interface Keyword {
   id: number;
@@ -44,12 +47,37 @@ export default function Keywords() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   type KeywordDraft = Pick<Keyword, "phrase" | "platforms">;
   const [dialogInitial, setDialogInitial] = useState<KeywordDraft | undefined>(undefined);
+  const [tier, setTier] = useState<SubscriptionTier>("free");
+
+  // Resolve subscription tier for current user
+  useState(() => {
+    (async () => {
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData?.user?.id;
+      if (!userId) {
+        setTier("free");
+        return;
+      }
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("subscription_status, price_id")
+        .eq("id", userId)
+        .maybeSingle();
+      setTier(resolveTierFromProfile(profile));
+    })();
+  });
 
   const handleDelete = (id: number) => {
     setKeywords(keywords.filter((k) => k.id !== id));
   };
 
   const openAddDialog = () => {
+    // Enforce 1 keyword for free/core
+    const maxKeywords = 1;
+    if ((tier === "free" || tier === "core") && keywords.length >= maxKeywords) {
+      toast.error("Limit reached. Upgrade to Pro for more capacity.");
+      return;
+    }
     setEditingId(null);
     setDialogInitial({
       phrase: "",
@@ -68,18 +96,23 @@ export default function Keywords() {
   };
 
   const handleSubmitDraft = (draft: KeywordDraft) => {
+    // Enforce Twitter only for Pro
+    const safePlatforms = {
+      ...draft.platforms,
+      twitter: tier === "pro" ? draft.platforms.twitter : false,
+    };
     if (editingId === null) {
       const newKeyword: Keyword = {
         id: Date.now(),
         phrase: draft.phrase,
-        platforms: { ...draft.platforms },
+        platforms: { ...safePlatforms },
         createdAt: new Date().toISOString().split("T")[0],
       };
       setKeywords((prev) => [...prev, newKeyword]);
     } else {
       setKeywords((prev) =>
         prev.map((k) =>
-          k.id === editingId ? { ...k, phrase: draft.phrase, platforms: { ...draft.platforms } } : k
+          k.id === editingId ? { ...k, phrase: draft.phrase, platforms: { ...safePlatforms } } : k
         )
       );
     }
@@ -118,6 +151,7 @@ export default function Keywords() {
           onSubmit={handleSubmitDraft}
           title={editingId === null ? "Add New Keyword" : "Edit Keyword"}
           submitLabel={editingId === null ? "Add Keyword" : "Save Changes"}
+          allowTwitter={tier === "pro"}
         />
 
         {/* Keywords List */}
