@@ -31,6 +31,7 @@ interface KeywordDialogProps {
   title?: string;
   submitLabel?: string;
   trigger?: React.ReactNode;
+  allowInstagram?: boolean;
   allowTwitter?: boolean;
 }
 
@@ -48,6 +49,7 @@ const KeywordDialog: React.FC<KeywordDialogProps> = ({
   title,
   submitLabel,
   trigger,
+  allowInstagram = true,
   allowTwitter = false,
 }) => {
   const [draft, setDraft] = React.useState<KeywordDraft>({
@@ -132,18 +134,19 @@ const KeywordDialog: React.FC<KeywordDialogProps> = ({
                   <div>
                     <p className="font-medium">Instagram</p>
                     <p className="text-sm text-slate-600">
-                      Track in posts and comments
+                      {allowInstagram ? "Included on Core and Pro" : "Available on Core and Pro"}
                     </p>
                   </div>
                 </div>
                 <Switch
-                  checked={draft.platforms.instagram}
+                  checked={draft.platforms.instagram && allowInstagram}
                   onCheckedChange={(checked: boolean) =>
                     setDraft((d) => ({
                       ...d,
                       platforms: { ...d.platforms, instagram: checked },
                     }))
                   }
+                  disabled={!allowInstagram}
                 />
               </div>
 

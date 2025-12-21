@@ -98,9 +98,10 @@ export default function Keywords() {
   };
 
   const handleSubmitDraft = (draft: KeywordDraft) => {
-    // Enforce Twitter only for Pro
+    // Enforce platform availability by tier
     const safePlatforms = {
       ...draft.platforms,
+      instagram: tier !== "free" ? draft.platforms.instagram : false,
       twitter: tier === "pro" ? draft.platforms.twitter : false,
     };
     if (editingId === null) {
@@ -152,6 +153,7 @@ export default function Keywords() {
           onSubmit={handleSubmitDraft}
           title={editingId === null ? "Add New Keyword" : "Edit Keyword"}
           submitLabel={editingId === null ? "Add Keyword" : "Save Changes"}
+          allowInstagram={tier !== "free"}
           allowTwitter={tier === "pro"}
         />
 
