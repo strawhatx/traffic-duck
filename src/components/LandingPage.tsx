@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Check, Search, Zap, Target, TrendingUp, Users, MessageCircle, Radar } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/lib/supabaseClient";
 
 const logo = "/duck-mascot.png";
 const takaraAvatar = "/takara-qode.jpg";
@@ -14,6 +15,7 @@ const LandingPage = () => {
   const [email, setEmail] = useState("");
   const [keywords, setKeywords] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loadingPrice, setLoadingPrice] = useState<string | null>(null);
 
   const handleWaitlistSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,11 +40,43 @@ const LandingPage = () => {
     document.getElementById("waitlist")?.scrollIntoView({ behavior: "smooth" });
   };
 
+  const priceCore = process.env.NEXT_PUBLIC_STRIPE_PRICE_CORE;
+  const pricePro = process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO;
+
+  const startCheckout = async (priceId?: string) => {
+    if (!priceId) {
+      toast.error("Pricing not configured yet.");
+      return;
+    }
+    setLoadingPrice(priceId);
+    const { data: userData } = await supabase.auth.getUser();
+    const userId = userData?.user?.id;
+    if (!userId) {
+      setLoadingPrice(null);
+      window.location.href = "/sign-in";
+      return;
+    }
+    try {
+      const res = await fetch("/api/stripe/create-checkout-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ priceId, userId }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Failed to start checkout");
+      window.location.href = json.url;
+    } catch (e: any) {
+      toast.error(e.message || "Unable to start checkout");
+    } finally {
+      setLoadingPrice(null);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center px-4 py-20">
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-background pointer-events-none" />
+        <div className="absolute inset-0 bg-linear-to-b from-primary/5 to-background pointer-events-none" />
         <div className="max-w-4xl w-full mx-auto text-center space-y-10 relative z-10">
           <div className="space-y-6 animate-fade-in">
             <div className="flex justify-center">
@@ -180,7 +214,7 @@ const LandingPage = () => {
               </p>
               <div className="space-y-4 pt-4">
                 <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
+                  <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-1">
                     <Check className="w-4 h-4 text-primary" />
                   </div>
                   <div>
@@ -189,7 +223,7 @@ const LandingPage = () => {
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
+                  <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-1">
                     <Check className="w-4 h-4 text-primary" />
                   </div>
                   <div>
@@ -198,7 +232,7 @@ const LandingPage = () => {
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
+                  <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-1">
                     <Check className="w-4 h-4 text-primary" />
                   </div>
                   <div>
@@ -264,19 +298,19 @@ const LandingPage = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                  <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                   <span className="text-sm">1 niche keyword</span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                  <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                   <span className="text-sm">Up to 3 conversations total</span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                  <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                   <span className="text-sm">Reddit only</span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                  <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                   <span className="text-sm">One-time delivery</span>
                 </div>
                 <div className="pt-4 border-t">
@@ -303,37 +337,41 @@ const LandingPage = () => {
                   <span className="text-5xl font-bold text-foreground">$29</span>
                   <span className="text-muted-foreground">/month</span>
                 </div>
-                <Button className="w-full bg-primary hover:bg-primary/90" onClick={scrollToWaitlist}>
-                  Start Free Trial
+                <Button
+                  className="w-full bg-primary hover:bg-primary/90"
+                  onClick={() => startCheckout(priceCore)}
+                  disabled={loadingPrice === priceCore}
+                >
+                  {loadingPrice === priceCore ? "Redirecting..." : "Start Free Trial"}
                 </Button>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                  <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                   <span className="text-sm font-medium">1 niche keyword</span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                  <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                   <span className="text-sm font-medium">Daily automated scanning</span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                  <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                   <span className="text-sm font-medium">Reddit + Instagram</span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                  <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                   <span className="text-sm font-medium">10-15 conversations/week</span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                  <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                   <span className="text-sm font-medium">Why-it-matters analysis</span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                  <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                   <span className="text-sm font-medium">Suggested engagement paths</span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                  <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                   <span className="text-sm font-medium">Email delivery or dashboard</span>
                 </div>
                 <div className="pt-4 border-t">
@@ -355,29 +393,34 @@ const LandingPage = () => {
                   <span className="text-5xl font-bold text-foreground">$59</span>
                   <span className="text-muted-foreground">/month</span>
                 </div>
-                <Button variant="outline" className="w-full" onClick={scrollToWaitlist}>
-                  Get Started
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => startCheckout(pricePro)}
+                  disabled={loadingPrice === pricePro}
+                >
+                  {loadingPrice === pricePro ? "Redirecting..." : "Get Started"}
                 </Button>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                  <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                   <span className="text-sm font-medium">Everything in Core</span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                  <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                   <span className="text-sm font-medium">Twitter / X included</span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                  <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                   <span className="text-sm font-medium">Near real-time freshness</span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                  <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                   <span className="text-sm font-medium">Priority scans</span>
                 </div>
                 <div className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                  <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                   <span className="text-sm font-medium">Early access to new channels</span>
                 </div>
                 <div className="pt-4 border-t">
@@ -394,7 +437,7 @@ const LandingPage = () => {
       {/* Testimonial */}
       <section className="py-24 px-4">
         <div className="max-w-3xl mx-auto">
-          <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-background shadow-xl">
+          <Card className="border-2 border-primary/20 bg-linear-to-br from-primary/5 to-background shadow-xl">
             <CardContent className="p-8 md:p-12 text-center space-y-6">
               <div className="flex justify-center">
                 <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
