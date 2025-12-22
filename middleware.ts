@@ -1,64 +1,72 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
-import { createMiddlewareClient } from "@supabase/auth-helpers-nextjs";
-
-const PUBLIC_ROUTE_PATTERNS: RegExp[] = [
-  /^\/$/,
-  /^\/sign-in(.*)/,
-  /^\/sign-up(.*)/,
-  /^\/legal(.*)/,
-
-  // Public assets
-  /^\/favicon\.ico$/,
-  /^\/robots\.txt$/,
-  /^\/sitemap\.xml$/,
-  // Webhooks (no auth)
-  /^\/api\/stripe\/webhook$/,
-];
-
-function isPublicRoute(pathname: string): boolean {
-  return PUBLIC_ROUTE_PATTERNS.some((re) => re.test(pathname));
-}
-
-function shouldNoIndex(pathname: string): boolean {
-  return (
-    pathname.startsWith("/auth") ||
-    pathname.startsWith("/sign-in") ||
-    pathname.startsWith("/sign-up")
-  );
-}
+ import { NextResponse } from 'next/server'
+ import type { NextRequest } from 'next/server'
+ import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
+ 
+ const PUBLIC_PATHS = [
+   '/',
+   '/login',
+   '/signup',
+   '/sign-in',
+   '/sign-up',
+   '/pricing',
+   '/favicon.ico',
+   '/robots.txt',
+   '/sitemap.xml',
+ ]
 
 export async function middleware(req: NextRequest) {
-  const res = NextResponse.next();
-  const supabase = createMiddlewareClient({ req, res });
+   // Basic debug to confirm middleware runs
+   // eslint-disable-next-line no-console
+   console.log('[middleware] path=', req.nextUrl.pathname)
+ 
+   const res = NextResponse.next()
+   res.headers.set('x-middleware-hit', '1')
+   const supabase = createMiddlewareClient({ req, res })
 
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user }
+  } = await supabase.auth.getUser()
 
-  const { pathname, search } = req.nextUrl;
-  const isPublic = isPublicRoute(pathname);
+  const pathname = req.nextUrl.pathname
 
-  if (!isPublic && !session) {
-    const redirectUrl = new URL("/sign-in", req.url);
-    if (pathname) {
-      redirectUrl.searchParams.set(
-        "redirect_to",
-        `${pathname}${search ?? ""}`
-      );
-    }
-    return NextResponse.redirect(redirectUrl);
+  // Allow public pages
+  if (PUBLIC_PATHS.includes(pathname)) {
+    return res
   }
 
-  if (shouldNoIndex(pathname)) {
-    res.headers.set("X-Robots-Tag", "noindex, nofollow");
+  // Allow Stripe webhook
+   if (pathname.startsWith('/api/stripe/webhook')) {
+    return res
   }
 
-  return res;
+  // ❌ Not logged in → login
+  if (!user) {
+    const loginUrl = new URL('/sign-in', req.url)
+    loginUrl.searchParams.set('redirectTo', pathname)
+    return NextResponse.redirect(loginUrl)
+  }
+
+  // Check subscription
+   // Optional: subscription gating (robust against missing table)
+   try {
+     const { data: profile } = await supabase
+       .from('profiles').select('subscription_status, price_id')
+       .eq('id', user.id).maybeSingle()
+     // Example gate: force billing page for users without active/trialing subscription
+     if (!profile || (profile.subscription_status !== 'active' && profile.subscription_status !== 'trialing')) {
+       // Allow public pages and auth pages; otherwise redirect to pricing
+       if (!PUBLIC_PATHS.includes(pathname)) {
+         return NextResponse.redirect(new URL('/pricing', req.url))
+       }
+     }
+   } catch (e) {
+     // ignore subscription errors in middleware to avoid locking users out
+   }
+
+  // ✅ All good
+   return res
 }
 
-export const config = {
-  matcher: ["/((?!.+\\.[\\w]+$|_next).*)", "/", "/(api|trpc)(.*)"],
-};
-
-
+ export const config = {
+   matcher: ['/((?!.+\\.[\\w]+$|_next).*)', '/', '/(api|trpc)(.*)'],
+ }
