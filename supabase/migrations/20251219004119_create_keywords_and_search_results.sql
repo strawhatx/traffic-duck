@@ -33,9 +33,10 @@
 
 CREATE TABLE IF NOT EXISTS keywords (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  user_id uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   keyword text NOT NULL,
-  platform text DEFAULT 'all' CHECK (platform IN ('reddit', 'instagram', 'twitter', 'all')),
+  platform text[] NOT NULL DEFAULT ARRAY['reddit']
+  CHECK (platform <@ ARRAY['reddit','instagram','twitter','all']),
   active boolean DEFAULT true,
   created_at timestamptz DEFAULT now(),
   updated_at timestamptz DEFAULT now(),
@@ -44,7 +45,7 @@ CREATE TABLE IF NOT EXISTS keywords (
 
 CREATE TABLE IF NOT EXISTS search_results (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  user_id uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   keyword_id uuid NOT NULL REFERENCES keywords(id) ON DELETE CASCADE,
   platform text NOT NULL CHECK (platform IN ('reddit', 'instagram', 'twitter')),
   title text NOT NULL,

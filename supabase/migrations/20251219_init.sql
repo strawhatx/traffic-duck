@@ -1,120 +1,52 @@
--- Profiles table (user profile linked to auth.users)
-create table if not exists public.profiles (
-  id uuid primary key references auth.users(id) on delete cascade,
-  created_at timestamptz not null default now(),
-  display_name text
+-- Create a table for public profiles
+create table profiles (
+  id uuid references auth.users on delete cascade not null primary key,
+  updated_at timestamp with time zone,
+  username text unique,
+  full_name text,
+  avatar_url text,
+  website text,
+
+  constraint username_length check (char_length(username) >= 3)
 );
+-- Set up Row Level Security (RLS)
+-- See https://supabase.com/docs/guides/auth/row-level-security for more details.
+alter table profiles
+  enable row level security;
 
-alter table public.profiles enable row level security;
+create policy "Public profiles are viewable by everyone." on profiles
+  for select using (true);
 
-create policy "profiles select own"
-on public.profiles for select
-using (auth.uid() = id);
+create policy "Users can insert their own profile." on profiles
+  for insert with check ((select auth.uid()) = id);
 
-create policy "profiles insert own"
-on public.profiles for insert
-with check (auth.uid() = id);
+create policy "Users can update own profile." on profiles
+  for update using ((select auth.uid()) = id);
 
-create policy "profiles update own"
-on public.profiles for update
-using (auth.uid() = id);
+-- This trigger automatically creates a profile entry when a new user signs up via Supabase Auth.
+-- See https://supabase.com/docs/guides/auth/managing-user-data#using-triggers for more details.
+create function public.handle_new_user()
+returns trigger
+set search_path = ''
+as $$
+begin
+  insert into public.profiles (id, full_name, avatar_url)
+  values (new.id, new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'avatar_url');
+  return new;
+end;
+$$ language plpgsql security definer;
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute procedure public.handle_new_user();
 
--- Platforms reference data
-create table if not exists public.platforms (
-  id serial primary key,
-  slug text not null unique,
-  name text not null,
-  is_pro_only boolean not null default false
-);
+-- Set up Storage!
+insert into storage.buckets (id, name)
+  values ('avatars', 'avatars');
 
-alter table public.platforms enable row level security;
+-- Set up access controls for storage.
+-- See https://supabase.com/docs/guides/storage#policy-examples for more details.
+create policy "Avatar images are publicly accessible." on storage.objects
+  for select using (bucket_id = 'avatars');
 
--- Allow read-only access to platforms for all
-create policy "platforms read"
-on public.platforms for select
-to anon, authenticated
-using (true);
-
--- Seed default platforms (idempotent)
-insert into public.platforms (slug, name, is_pro_only)
-values
-  ('reddit', 'Reddit', false),
-  ('instagram', 'Instagram', false),
-  ('twitter', 'Twitter / X', true)
-on conflict (slug) do update set
-  name = excluded.name,
-  is_pro_only = excluded.is_pro_only;
-
--- Keywords owned by users
-create table if not exists public.keywords (
-  id bigserial primary key,
-  user_id uuid not null references auth.users(id) on delete cascade,
-  phrase text not null,
-  created_at timestamptz not null default now(),
-  constraint unique_user_phrase unique (user_id, phrase)
-);
-
-alter table public.keywords enable row level security;
-
-create policy "keywords select own"
-on public.keywords for select
-using (auth.uid() = user_id);
-
-create policy "keywords insert own"
-on public.keywords for insert
-with check (auth.uid() = user_id);
-
-create policy "keywords update own"
-on public.keywords for update
-using (auth.uid() = user_id);
-
-create policy "keywords delete own"
-on public.keywords for delete
-using (auth.uid() = user_id);
-
--- Join table: which platforms are tracked for a keyword
-create table if not exists public.keyword_platforms (
-  keyword_id bigint not null references public.keywords(id) on delete cascade,
-  platform_id integer not null references public.platforms(id) on delete restrict,
-  primary key (keyword_id, platform_id)
-);
-
-alter table public.keyword_platforms enable row level security;
-
-create policy "keyword_platforms own via keyword"
-on public.keyword_platforms for select
-using (
-  exists (
-    select 1 from public.keywords k
-    where k.id = keyword_id and k.user_id = auth.uid()
-  )
-);
-
-create policy "keyword_platforms insert own via keyword"
-on public.keyword_platforms for insert
-with check (
-  exists (
-    select 1 from public.keywords k
-    where k.id = keyword_id and k.user_id = auth.uid()
-  )
-);
-
-create policy "keyword_platforms update own via keyword"
-on public.keyword_platforms for update
-using (
-  exists (
-    select 1 from public.keywords k
-    where k.id = keyword_id and k.user_id = auth.uid()
-  )
-);
-
-create policy "keyword_platforms delete own via keyword"
-on public.keyword_platforms for delete
-using (
-  exists (
-    select 1 from public.keywords k
-    where k.id = keyword_id and k.user_id = auth.uid()
-  )
-);
-
-
+create policy "Anyone can upload an avatar." on storage.objects
+  for insert with check (bucket_id = 'avatars');

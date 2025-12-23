@@ -9,9 +9,10 @@ import KeywordDialog from "@/components/KeywordDialog";
 import { supabase } from "@/lib/supabaseClient";
 import { resolveTierFromProfile, SubscriptionTier } from "@/lib/subscription";
 import { toast } from "sonner";
+import { useRequireAuth } from "@/hooks/use-require-auth";
 
 interface Keyword {
-  id: number;
+  id: string;
   phrase: string;
   platforms: {
     reddit: boolean;
@@ -22,28 +23,10 @@ interface Keyword {
 }
 
 export default function Keywords() {
-  const [keywords, setKeywords] = useState<Keyword[]>([
-    {
-      id: 1,
-      phrase: "SaaS productivity tools",
-      platforms: { reddit: true, instagram: true, twitter: false },
-      createdAt: "2025-01-10",
-    },
-    {
-      id: 2,
-      phrase: "project management software",
-      platforms: { reddit: true, instagram: false, twitter: false },
-      createdAt: "2025-01-10",
-    },
-    {
-      id: 3,
-      phrase: "email marketing automation",
-      platforms: { reddit: true, instagram: true, twitter: false },
-      createdAt: "2025-01-12",
-    },
-  ]);
+  const { loading, userId } = useRequireAuth();
+  const [keywords, setKeywords] = useState<Keyword[]>([]);
 
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   type KeywordDraft = Pick<Keyword, "phrase" | "platforms">;
   const [dialogInitial, setDialogInitial] = useState<KeywordDraft | undefined>(undefined);
@@ -69,8 +52,66 @@ export default function Keywords() {
     };
   }, []);
 
-  const handleDelete = (id: number) => {
-    setKeywords(keywords.filter((k) => k.id !== id));
+  // Map DB platform[] to UI booleans
+  const arrayToPlatforms = (arr: string[]) => ({
+    reddit: arr?.includes("reddit") ?? false,
+    instagram: arr?.includes("instagram") ?? false,
+    twitter: arr?.includes("twitter") ?? false,
+  });
+
+  // Map UI booleans to DB platform[]
+  const platformsToArray = (platforms: Keyword["platforms"]) => {
+    const items: string[] = [];
+    if (platforms.reddit) items.push("reddit");
+    if (platforms.instagram) items.push("instagram");
+    if (platforms.twitter) items.push("twitter");
+    return items.length > 0 ? items : ["reddit"];
+  };
+
+  const mapRowToKeyword = (row: {
+    id: string;
+    keyword: string;
+    platform: string[];
+    created_at: string;
+  }): Keyword => ({
+    id: row.id,
+    phrase: row.keyword,
+    platforms: arrayToPlatforms(row.platform ?? []),
+    createdAt: row.created_at ?? new Date().toISOString().split("T")[0],
+  });
+
+  // Load keywords for current user
+  useEffect(() => {
+    if (loading || !userId) return;
+    let cancelled = false;
+    const fetchKeywords = async () => {
+      const { data, error } = await supabase
+        .from("keywords")
+        .select("id, keyword, platform, created_at")
+        .order("created_at", { ascending: true });
+      if (error) {
+        toast.error("Failed to load keywords");
+        return;
+      }
+      if (!cancelled && data) {
+        setKeywords(data.map(mapRowToKeyword));
+      }
+    };
+    fetchKeywords();
+    return () => {
+      cancelled = true;
+    };
+  }, [loading, userId]);
+
+  const handleDelete = (id: string) => {
+    void (async () => {
+      const { error } = await supabase.from("keywords").delete().eq("id", id);
+      if (error) {
+        toast.error("Failed to delete keyword");
+        return;
+      }
+      setKeywords((prev) => prev.filter((k) => k.id !== id));
+    })();
   };
 
   const openAddDialog = () => {
@@ -104,24 +145,40 @@ export default function Keywords() {
       instagram: tier !== "free" ? draft.platforms.instagram : false,
       twitter: tier === "pro" ? draft.platforms.twitter : false,
     };
-    if (editingId === null) {
-      const newKeyword: Keyword = {
-        id: Date.now(),
-        phrase: draft.phrase,
-        platforms: { ...safePlatforms },
-        createdAt: new Date().toISOString().split("T")[0],
-      };
-      setKeywords((prev) => [...prev, newKeyword]);
-    } else {
-      setKeywords((prev) =>
-        prev.map((k) =>
-          k.id === editingId ? { ...k, phrase: draft.phrase, platforms: { ...safePlatforms } } : k
-        )
-      );
-    }
-    setIsDialogOpen(false);
-    setEditingId(null);
-    setDialogInitial(undefined);
+    const platformArr = platformsToArray(safePlatforms);
+    void (async () => {
+      if (!userId) {
+        toast.error("You must be signed in");
+        return;
+      }
+      if (editingId === null) {
+        const { data, error } = await supabase
+          .from("keywords")
+          .insert({ user_id: userId, keyword: draft.phrase, platform: platformArr })
+          .select("id, keyword, platform, created_at")
+          .maybeSingle();
+        if (error || !data) {
+          toast.error(error?.message ?? "Failed to add keyword");
+          return;
+        }
+        setKeywords((prev) => [...prev, mapRowToKeyword(data)]);
+      } else {
+        const { data, error } = await supabase
+          .from("keywords")
+          .update({ keyword: draft.phrase, platform: platformArr })
+          .eq("id", editingId)
+          .select("id, keyword, platform, created_at")
+          .maybeSingle();
+        if (error || !data) {
+          toast.error(error?.message ?? "Failed to save changes");
+          return;
+        }
+        setKeywords((prev) => prev.map((k) => (k.id === editingId ? mapRowToKeyword(data) : k)));
+      }
+      setIsDialogOpen(false);
+      setEditingId(null);
+      setDialogInitial(undefined);
+    })();
   };
 
   const getPlatformCount = (platforms: Keyword["platforms"]) => {
@@ -130,6 +187,14 @@ export default function Keywords() {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      {loading ? (
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <Card className="p-12 text-center">
+            <Radar className="w-12 h-12 text-slate-300 mx-auto mb-4 animate-pulse" />
+            <h3 className="text-lg mb-2">Checking your session...</h3>
+          </Card>
+        </div>
+      ) : (
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -248,6 +313,7 @@ export default function Keywords() {
           </div>
         </div>
       </div>
+      )}
     </div>
   );
 }
