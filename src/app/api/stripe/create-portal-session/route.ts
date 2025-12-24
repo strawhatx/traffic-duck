@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
     if (error || !profile?.stripe_customer_id) {
       return NextResponse.json({ error: "No Stripe customer" }, { status: 400 });
     }
-    const stripe = new Stripe(stripeSecret, { apiVersion: "2024-11-20.acacia" });
+    const stripe = new Stripe(stripeSecret, { apiVersion: "2024-04-10" });
     const origin = req.headers.get("origin") ?? process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
     const session = await stripe.billingPortal.sessions.create({
       customer: profile.stripe_customer_id,

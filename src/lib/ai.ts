@@ -120,18 +120,17 @@ export async function generateIntentsFromAI(
     {
       role: "system",
       content:
-        "You generate search query intents for discovering high-signal social conversations. Return strict JSON only.",
+        "You generate problem-oriented search queries that mirror how users ask for help, compare options, or describe pain points on social sites. Return strict JSON only.",
     },
     {
       role: "user",
       content:
-        `From the following niche description, generate ${Math.min(
-          Math.max(3, maxIntents),
-          20,
-        )} concise search intents (2-6 words each).` +
-        " They should be specific, action-oriented, and likely to match Reddit/Twitter conversations where the audience is asking, comparing, or seeking help." +
-        " Do not include explanations or code fences. Return JSON in the form: { \"intents\": string[] }. " +
-        `Niche: "${nicheDescription || ""}"`,
+        `From the following niche description, generate 2 concise, problem-style queries (4-10 words each).` +
+        " Use first-person or help-seeking phrasing like 'can't', 'how do I', 'struggling to', 'need', 'looking for'." +
+        " Avoid brand names and avoid marketing fluff. Favor verbs and concrete outcomes." +
+        " These should match Reddit/Twitter conversations where people seek help, compare approaches, or ask for tips." +
+        " Output strict JSON only: { \"intents\": string[] } with high-variance, non-overlapping phrases." +
+        ` Niche: "${nicheDescription || ""}"`,
     },
   ];
 

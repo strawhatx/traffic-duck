@@ -1,4 +1,3 @@
-"use server";
 
 import Stripe from "stripe";
 import { NextRequest, NextResponse } from "next/server";
@@ -11,7 +10,7 @@ export async function POST(req: NextRequest) {
   if (!stripeSecret || !webhookSecret) {
     return NextResponse.json({ error: "Stripe not configured" }, { status: 500 });
   }
-  const stripe = new Stripe(stripeSecret, { apiVersion: "2024-11-20.acacia" });
+  const stripe = new Stripe(stripeSecret, { apiVersion: "2024-04-10" });
 
   const payload = await req.text();
   const sig = req.headers.get("stripe-signature") as string;

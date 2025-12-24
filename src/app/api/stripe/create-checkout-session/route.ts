@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing priceId or userId" }, { status: 400 });
     }
 
-    const stripe = new Stripe(stripeSecret, { apiVersion: "2024-11-20.acacia" });
+    const stripe = new Stripe(stripeSecret, { apiVersion: "2024-04-10" });
     const origin = req.headers.get("origin") ?? process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
     // Find or create Stripe customer for this user
