@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import { Radar, TrendingUp, MessageSquare, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -70,7 +69,7 @@ export default function Dashboard() {
         .select("id, platform, title, content, author, url, engagement, intent, discovered_at")
         .order("discovered_at", { ascending: false, nullsFirst: false })
         .limit(limit);
-        
+
       if (cancelled) return;
       if (error) {
         setError("Failed to load results");
