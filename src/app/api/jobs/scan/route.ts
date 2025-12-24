@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
       const withAnalysis = tier !== "free";
 
       // Generate intents and respect maxKeywords per tier (niches mapped to intent count)
-      const intents = generateIntentsFromNiche(niche);
+      const intents = await generateIntentsFromNiche(niche);
       const maxKeywords = limits.maxKeywords === "unlimited" ? Infinity : limits.maxKeywords;
       const selectedIntents = intents.slice(0, Math.max(0, maxKeywords));
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Radar, TrendingUp, MessageSquare, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,57 +11,32 @@ import NicheDialog from "@/components/NicheDialog";
 import { supabase } from "@/lib/supabaseClient";
 import { toast } from "sonner";
 
-// Mock data for conversations
-const mockConversations = [
-  {
-    id: 1,
-    platform: "reddit",
-    title: "Looking for a good email marketing tool for small business",
-    excerpt:
-      "I've been using MailChimp but it's getting too expensive. Any recommendations for something similar but more affordable?",
-    relevance: "high",
-    upvotes: 47,
-    comments: 23,
-    timeAgo: "2 hours ago",
-    subreddit: "r/smallbusiness",
-    engagement: "Medium traffic - Quick response recommended",
-  },
-  {
-    id: 2,
-    platform: "twitter",
-    title: "Thread asking for productivity tools for remote teams",
-    excerpt:
-      "Looking for the best productivity tools for remote teams — what's working for you?",
-    relevance: "medium",
-    likes: 134,
-    comments: 45,
-    timeAgo: "5 hours ago",
-    handle: "@productivityhacks",
-    engagement: "High engagement - Audience is active",
-  },
-  {
-    id: 3,
-    platform: "reddit",
-    title: "Struggling with project management software",
-    excerpt:
-      "Our team of 10 is growing fast and Trello isn't cutting it anymore. What do you guys use?",
-    relevance: "high",
-    upvotes: 89,
-    comments: 56,
-    timeAgo: "6 hours ago",
-    subreddit: "r/startups",
-    engagement: "Hot thread - Many similar pain points expressed",
-  },
-];
+type SearchResult = {
+  id: string;
+  platform: "reddit" | "twitter" | "instagram";
+  title: string;
+  content: string | null;
+  author: string;
+  url: string;
+  engagement: Record<string, unknown> | null;
+  intent: string | null;
+  discovered_at: string | null;
+};
 
 export default function Dashboard() {
   const [niche, setNiche] = useState<string>("");
   const [nicheOpen, setNicheOpen] = useState(false);
   const [nicheInitial, setNicheInitial] = useState<string | undefined>(undefined);
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [platformFilter, setPlatformFilter] = useState<"all" | "reddit" | "twitter">("all");
+  const [search, setSearch] = useState<string>("");
+  const [limit, setLimit] = useState<number>(50);
 
   useEffect(() => {
     let cancelled = false;
-    const load = async () => {
+    const loadNiche = async () => {
       const { data: userData } = await supabase.auth.getUser();
       const userId = userData?.user?.id;
       if (!userId) return;
@@ -72,11 +47,44 @@ export default function Dashboard() {
         .maybeSingle();
       if (!cancelled) setNiche(profile?.niche_description ?? "");
     };
-    load();
+    loadNiche();
     return () => {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadResults = async () => {
+      setLoading(true);
+      setError(null);
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData?.user?.id;
+      if (!userId) {
+        setLoading(false);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("search_results")
+        .select("id, platform, title, content, author, url, engagement, intent, discovered_at")
+        .order("discovered_at", { ascending: false, nullsFirst: false })
+        .limit(limit);
+        
+      if (cancelled) return;
+      if (error) {
+        setError("Failed to load results");
+        setResults([]);
+      } else {
+        setResults((data as any as SearchResult[]) ?? []);
+      }
+      setLoading(false);
+    };
+    void loadResults();
+    return () => {
+      cancelled = true;
+    };
+  }, [limit]);
 
   const openNicheDialog = () => {
     setNicheInitial(niche || "");
@@ -102,6 +110,31 @@ export default function Dashboard() {
     })();
   };
 
+  const filteredResults = useMemo(() => {
+    const text = search.trim().toLowerCase();
+    return results.filter((r) => {
+      const matchesPlatform = platformFilter === "all" ? true : r.platform === platformFilter;
+      const hay = `${r.title ?? ""} ${r.content ?? ""} ${r.author ?? ""} ${r.intent ?? ""}`.toLowerCase();
+      const matchesSearch = text.length === 0 ? true : hay.includes(text);
+      return matchesPlatform && matchesSearch;
+    });
+  }, [results, platformFilter, search]);
+
+  const weekStats = useMemo(() => {
+    const now = Date.now();
+    const weekAgo = now - 7 * 24 * 60 * 60 * 1000;
+    let thisWeek = 0;
+    let reddit = 0;
+    let twitter = 0;
+    for (const r of results) {
+      if (r.platform === "reddit") reddit += 1;
+      if (r.platform === "twitter") twitter += 1;
+      const ts = r.discovered_at ? Date.parse(r.discovered_at) : 0;
+      if (!Number.isNaN(ts) && ts >= weekAgo) thisWeek += 1;
+    }
+    return { thisWeek, reddit, twitter };
+  }, [results]);
+
   return (
     <div className="min-h-screen bg-slate-50">
 
@@ -113,7 +146,7 @@ export default function Dashboard() {
             <div>
               <h1 className="text-3xl mb-2">Conversation Radar</h1>
               <p className="text-slate-600">
-                Tracking conversations for: <strong>SaaS productivity tools</strong>
+                Tracking conversations for: <strong>{niche || "—"}</strong>
               </p>
             </div>
             <div>
@@ -140,7 +173,7 @@ export default function Dashboard() {
                   <p className="text-sm text-slate-600 mb-1">
                     This Week
                   </p>
-                  <p className="text-3xl">12</p>
+                  <p className="text-3xl">{weekStats.thisWeek}</p>
                 </div>
                 <MessageSquare className="w-8 h-8 text-blue-600" />
               </div>
@@ -150,9 +183,9 @@ export default function Dashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-slate-600 mb-1">
-                    High Relevance
+                    Reddit Results
                   </p>
-                  <p className="text-3xl">8</p>
+                  <p className="text-3xl">{weekStats.reddit}</p>
                 </div>
                 <TrendingUp className="w-8 h-8 text-green-600" />
               </div>
@@ -162,9 +195,9 @@ export default function Dashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-slate-600 mb-1">
-                    Avg. Response Time
+                    Twitter Results
                   </p>
-                  <p className="text-3xl">4.2h</p>
+                  <p className="text-3xl">{weekStats.twitter}</p>
                 </div>
                 <Radar className="w-8 h-8 text-purple-600" />
               </div>
@@ -177,96 +210,137 @@ export default function Dashboard() {
           <Input
             placeholder="Search conversations..."
             className="max-w-sm"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
           />
           <div className="flex gap-2">
-            <Badge variant="outline" className="cursor-pointer">All</Badge>
-            <Badge variant="outline" className="cursor-pointer">Reddit</Badge>
-            <Badge variant="outline" className="cursor-pointer">Twitter</Badge>
+            <Badge
+              variant="outline"
+              className={`cursor-pointer ${platformFilter === "all" ? "bg-slate-200" : ""}`}
+              onClick={() => setPlatformFilter("all")}
+            >
+              All
+            </Badge>
+            <Badge
+              variant="outline"
+              className={`cursor-pointer ${platformFilter === "reddit" ? "bg-slate-200" : ""}`}
+              onClick={() => setPlatformFilter("reddit")}
+            >
+              Reddit
+            </Badge>
+            <Badge
+              variant="outline"
+              className={`cursor-pointer ${platformFilter === "twitter" ? "bg-slate-200" : ""}`}
+              onClick={() => setPlatformFilter("twitter")}
+            >
+              Twitter
+            </Badge>
           </div>
         </div>
 
         {/* Conversations List */}
         <div className="space-y-4">
-          {mockConversations.map((conversation) => (
-            <Card key={conversation.id} className="p-6 hover:shadow-md transition-shadow">
-              <div className="flex gap-4">
-                {/* Platform Icon */}
-                <div className="shrink-0">
-                  <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                      conversation.platform === "reddit"
-                        ? "bg-orange-100"
-                        : "bg-blue-100"
-                    }`}
-                  >
-                    <MessageSquare
-                      className={`w-5 h-5 ${
-                        conversation.platform === "reddit"
-                          ? "text-orange-600"
-                          : "text-blue-600"
-                      }`}
-                    />
-                  </div>
-                </div>
-
-                {/* Content */}
-                <div className="flex-1">
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <h3 className="text-lg mb-1">{conversation.title}</h3>
-                      <p className="text-sm text-slate-600">
-                        {conversation.platform === "reddit"
-                          ? conversation.subreddit
-                          : conversation.handle}{" "}
-                        · {conversation.timeAgo}
-                      </p>
-                    </div>
-                    <Badge
-                      className={
-                        conversation.relevance === "high"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-yellow-100 text-yellow-800"
-                      }
-                    >
-                      {conversation.relevance === "high" ? "High" : "Medium"} Relevance
-                    </Badge>
-                  </div>
-
-                  <p className="text-slate-700 mb-3">{conversation.excerpt}</p>
-
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
-                    <p className="text-sm">
-                      <strong>Why it matters:</strong> {conversation.engagement}
-                    </p>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex gap-4 text-sm text-slate-600">
-                      <span>
-                        👍 {conversation.platform === "reddit" ? conversation.upvotes : conversation.likes}
-                      </span>
-                      <span>💬 {conversation.comments} comments</span>
-                    </div>
-
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm">
-                        Save
-                      </Button>
-                      <Button size="sm">
-                        <ExternalLink className="w-4 h-4 mr-2" />
-                        View & Engage
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
+          {loading && (
+            <Card className="p-6">
+              <p className="text-sm text-slate-600">Loading conversations…</p>
             </Card>
-          ))}
+          )}
+          {!loading && filteredResults.length === 0 && (
+            <Card className="p-6">
+              <p className="text-sm text-slate-600">
+                {error ? error : "No conversations found. Try adjusting filters."}
+              </p>
+            </Card>
+          )}
+          {filteredResults.map((conversation) => {
+            const isReddit = conversation.platform === "reddit";
+            const engagement = conversation.engagement ?? {};
+            const upvotes = Number(
+              typeof (engagement as any).upvotes === "number" ? (engagement as any).upvotes : 0,
+            );
+            const likes = Number(
+              typeof (engagement as any).likes === "number" ? (engagement as any).likes : 0,
+            );
+            const comments = Number(
+              typeof (engagement as any).comments === "number" ? (engagement as any).comments : 0,
+            );
+            return (
+              <Card key={conversation.id} className="p-6 hover:shadow-md transition-shadow">
+                <div className="flex gap-4">
+                  {/* Platform Icon */}
+                  <div className="shrink-0">
+                    <div
+                      className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                        isReddit ? "bg-orange-100" : "bg-blue-100"
+                      }`}
+                    >
+                      <MessageSquare
+                        className={`w-5 h-5 ${isReddit ? "text-orange-600" : "text-blue-600"}`}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-1">
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <h3 className="text-lg mb-1">{conversation.title}</h3>
+                        <p className="text-sm text-slate-600">
+                          {conversation.intent ? `${conversation.intent} · ` : ""}
+                          {conversation.author}
+                        </p>
+                      </div>
+                    </div>
+
+                    {conversation.content && (
+                      <p className="text-slate-700 mb-3">{conversation.content}</p>
+                    )}
+
+                    {(engagement && (conversation.intent || comments || upvotes || likes)) && (
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
+                        <p className="text-sm">
+                          <strong>Why it matters:</strong>{" "}
+                          {typeof (engagement as any).why_matters === "string"
+                            ? (engagement as any).why_matters
+                            : "High-signal audience overlap and actionable conversation."}
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-between">
+                      <div className="flex gap-4 text-sm text-slate-600">
+                        <span>👍 {isReddit ? upvotes : likes}</span>
+                        <span>💬 {comments} comments</span>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm">
+                          Save
+                        </Button>
+                        <Button size="sm" asChild>
+                          <a href={conversation.url} target="_blank" rel="noopener noreferrer">
+                            <ExternalLink className="w-4 h-4 mr-2" />
+                            View & Engage
+                          </a>
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            );
+          })}
         </div>
 
         {/* Load More */}
         <div className="text-center mt-8">
-          <Button variant="outline">Load More Conversations</Button>
+          <Button
+            variant="outline"
+            onClick={() => setLimit((l) => l + 50)}
+            disabled={loading}
+          >
+            Load More Conversations
+          </Button>
         </div>
       </div>
     </div>
