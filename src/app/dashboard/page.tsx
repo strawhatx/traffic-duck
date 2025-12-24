@@ -1,9 +1,15 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Radar, TrendingUp, MessageSquare, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import NicheDialog from "@/components/NicheDialog";
+import { supabase } from "@/lib/supabaseClient";
+import { toast } from "sonner";
 
 // Mock data for conversations
 const mockConversations = [
@@ -22,10 +28,10 @@ const mockConversations = [
   },
   {
     id: 2,
-    platform: "instagram",
-    title: "DM conversation about productivity apps",
+    platform: "twitter",
+    title: "Thread asking for productivity tools for remote teams",
     excerpt:
-      "Someone asking about best productivity tools for remote teams in comments...",
+      "Looking for the best productivity tools for remote teams — what's working for you?",
     relevance: "medium",
     likes: 134,
     comments: 45,
@@ -49,6 +55,53 @@ const mockConversations = [
 ];
 
 export default function Dashboard() {
+  const [niche, setNiche] = useState<string>("");
+  const [nicheOpen, setNicheOpen] = useState(false);
+  const [nicheInitial, setNicheInitial] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData?.user?.id;
+      if (!userId) return;
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("niche_description")
+        .eq("id", userId)
+        .maybeSingle();
+      if (!cancelled) setNiche(profile?.niche_description ?? "");
+    };
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const openNicheDialog = () => {
+    setNicheInitial(niche || "");
+    setNicheOpen(true);
+  };
+
+  const handleSaveNiche = (value: string) => {
+    void (async () => {
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData?.user?.id;
+      if (!userId) {
+        toast.error("You must be signed in");
+        return;
+      }
+      const { error } = await supabase.from("profiles").update({ niche_description: value }).eq("id", userId);
+      if (error) {
+        toast.error("Failed to save niche");
+        return;
+      }
+      setNiche(value);
+      setNicheOpen(false);
+      toast.success("Niche updated");
+    })();
+  };
+
   return (
     <div className="min-h-screen bg-slate-50">
 
@@ -63,12 +116,20 @@ export default function Dashboard() {
                 Tracking conversations for: <strong>SaaS productivity tools</strong>
               </p>
             </div>
-            <Link href="/keywords">
-              <Button>
-                <Radar className="w-4 h-4 mr-2" />
-                Update Keywords
+            <div>
+              <Button onClick={openNicheDialog}>
+                <Radar className="w-4 h-4 mr-2 shrink-0" />
+                Update Niche
               </Button>
-            </Link>
+              <NicheDialog
+                open={nicheOpen}
+                onOpenChange={setNicheOpen}
+                initialValue={nicheInitial}
+                onSubmit={handleSaveNiche}
+                title="Describe Your Niche"
+                submitLabel="Save Niche"
+              />
+            </div>
           </div>
 
           {/* Stats */}
@@ -120,7 +181,6 @@ export default function Dashboard() {
           <div className="flex gap-2">
             <Badge variant="outline" className="cursor-pointer">All</Badge>
             <Badge variant="outline" className="cursor-pointer">Reddit</Badge>
-            <Badge variant="outline" className="cursor-pointer">Instagram</Badge>
             <Badge variant="outline" className="cursor-pointer">Twitter</Badge>
           </div>
         </div>
@@ -131,19 +191,19 @@ export default function Dashboard() {
             <Card key={conversation.id} className="p-6 hover:shadow-md transition-shadow">
               <div className="flex gap-4">
                 {/* Platform Icon */}
-                <div className="flex-shrink-0">
+                <div className="shrink-0">
                   <div
                     className={`w-10 h-10 rounded-full flex items-center justify-center ${
                       conversation.platform === "reddit"
                         ? "bg-orange-100"
-                        : "bg-pink-100"
+                        : "bg-blue-100"
                     }`}
                   >
                     <MessageSquare
                       className={`w-5 h-5 ${
                         conversation.platform === "reddit"
                           ? "text-orange-600"
-                          : "text-pink-600"
+                          : "text-blue-600"
                       }`}
                     />
                   </div>

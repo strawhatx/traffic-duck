@@ -14,4 +14,33 @@ export function resolveTierFromProfile(profile?: {
   return "free";
 }
 
+export type PlanLimits = {
+  maxKeywords: number | "unlimited";
+  maxWeeklyPulls?: number | "unlimited";
+  maxWeeklyResultsPerKeyword?: number | "unlimited";
+  maxLifetimeResults?: number | "unlimited";
+};
+
+export function getPlanLimits(tier: SubscriptionTier): PlanLimits {
+  switch (tier) {
+    case "free":
+      return {
+        maxKeywords: 1,
+        // Enforced server-side via trigger on search_results
+        maxLifetimeResults: 2,
+      };
+    case "core":
+      return {
+        maxKeywords: 1,
+        maxWeeklyResultsPerKeyword: 12,
+      };
+    case "pro":
+      return {
+        maxKeywords: "unlimited",
+        maxWeeklyResultsPerKeyword: "unlimited",
+        maxLifetimeResults: "unlimited",
+      };
+  }
+}
+
 

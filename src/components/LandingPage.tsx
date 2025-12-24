@@ -13,7 +13,7 @@ const takaraAvatar = "/takara-qode.jpg";
 
 const LandingPage = () => {
   const [email, setEmail] = useState("");
-  const [keywords, setKeywords] = useState("");
+  const [niche, setNiche] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadingPrice, setLoadingPrice] = useState<string | null>(null);
 
@@ -27,7 +27,7 @@ const LandingPage = () => {
     setTimeout(() => {
       toast.success("You're on the list! We'll be in touch soon.");
       setEmail("");
-      setKeywords("");
+      setNiche("");
       setIsSubmitting(false);
     }, 1000);
   };
@@ -140,11 +140,11 @@ const LandingPage = () => {
                 <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
                   <Target className="w-7 h-7 text-primary" />
                 </div>
-                <CardTitle className="text-2xl">1. Enter Your Keywords</CardTitle>
+              <CardTitle className="text-2xl">1. Describe Your Niche</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <p className="text-muted-foreground leading-relaxed">
-                  Tell us your niche keywords like "SaaS marketing", "indie hacking", or "content strategy". Our radar tracks these phrases across platforms.
+                  Tell us your niche, audience, and problems you solve. We’ll generate intent clusters automatically.
                 </p>
                 <div className="pt-2 space-y-2">
                   <div className="text-sm font-mono bg-muted/50 px-3 py-2 rounded-lg">
@@ -167,7 +167,7 @@ const LandingPage = () => {
               </CardHeader>
               <CardContent className="space-y-3">
                 <p className="text-muted-foreground leading-relaxed">
-                  Every day, TrafficDuck scans Reddit, Instagram, and Twitter for active conversations matching your keywords. Fresh leads while you sleep.
+                  Every day, TrafficDuck scans Reddit, Instagram, and Twitter for active conversations that match your niche intent clusters.
                 </p>
                 <div className="pt-2">
                   <div className="flex items-center gap-2 text-sm">
@@ -250,7 +250,7 @@ const LandingPage = () => {
               </Card>
               <Card className="p-6 text-center border-2">
                 <Users className="w-10 h-10 text-primary mx-auto mb-3" />
-                <div className="text-3xl font-bold text-foreground mb-1">3</div>
+                <div className="text-3xl font-bold text-foreground mb-1">2</div>
                 <div className="text-sm text-muted-foreground">Platforms scanned</div>
               </Card>
               <Card className="p-6 text-center border-2">
@@ -271,7 +271,7 @@ const LandingPage = () => {
       {/* Pricing Section */}
       <section id="pricing" className="py-24 px-4 bg-muted/30">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center space-y-4 mb-16">
+          <div className="text-center space-y-4 mb-6">
             <Badge variant="secondary" className="text-sm px-4 py-1">Pricing</Badge>
             <h2 className="text-3xl md:text-5xl font-heading font-bold text-foreground">
               Simple, Transparent Pricing
@@ -280,6 +280,9 @@ const LandingPage = () => {
               Start free, upgrade when you're ready to scale
             </p>
           </div>
+          <p className="text-sm text-center text-muted-foreground mb-10">
+            Founding users get locked-in pricing as TrafficDuck evolves.
+          </p>
 
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {/* Free Tier */}
@@ -287,7 +290,7 @@ const LandingPage = () => {
               <CardHeader className="text-center pb-8">
                 <div className="mb-4">
                   <h3 className="text-2xl font-bold text-foreground mb-2">Free</h3>
-                  <p className="text-sm text-muted-foreground">Sample the radar</p>
+                  <p className="text-sm text-muted-foreground">Preview the Radar</p>
                 </div>
                 <div className="mb-4">
                   <span className="text-5xl font-bold text-foreground">$0</span>
@@ -299,11 +302,11 @@ const LandingPage = () => {
               <CardContent className="space-y-4">
                 <div className="flex items-start gap-2">
                   <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                  <span className="text-sm">1 niche keyword</span>
+                  <span className="text-sm">1 niche</span>
                 </div>
                 <div className="flex items-start gap-2">
                   <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                  <span className="text-sm">Up to 3 conversations total</span>
+                  <span className="text-sm">1–2 conversations</span>
                 </div>
                 <div className="flex items-start gap-2">
                   <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
@@ -314,8 +317,8 @@ const LandingPage = () => {
                   <span className="text-sm">One-time delivery</span>
                 </div>
                 <div className="pt-4 border-t">
-                  <p className="text-xs text-muted-foreground italic">
-                    Perfect to prove the magic
+                  <p className="text-xs text-muted-foreground">
+                    Preview the kind of conversations we surface.
                   </p>
                 </div>
               </CardContent>
@@ -342,13 +345,13 @@ const LandingPage = () => {
                   onClick={() => startCheckout(priceCore)}
                   disabled={loadingPrice === priceCore}
                 >
-                  {loadingPrice === priceCore ? "Redirecting..." : "Start Free Trial"}
+                  {loadingPrice === priceCore ? "Redirecting..." : "Unlock Daily Radar"}
                 </Button>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-start gap-2">
                   <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                  <span className="text-sm font-medium">1 niche keyword</span>
+                  <span className="text-sm font-medium">1 niche</span>
                 </div>
                 <div className="flex items-start gap-2">
                   <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
@@ -356,11 +359,11 @@ const LandingPage = () => {
                 </div>
                 <div className="flex items-start gap-2">
                   <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                  <span className="text-sm font-medium">Reddit + Instagram</span>
+                  <span className="text-sm font-medium">Reddit</span>
                 </div>
                 <div className="flex items-start gap-2">
                   <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                  <span className="text-sm font-medium">10-15 conversations/week</span>
+                  <span className="text-sm font-medium">8–12 high-signal conversations/week</span>
                 </div>
                 <div className="flex items-start gap-2">
                   <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
@@ -372,7 +375,7 @@ const LandingPage = () => {
                 </div>
                 <div className="flex items-start gap-2">
                   <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                  <span className="text-sm font-medium">Email delivery or dashboard</span>
+                  <span className="text-sm font-medium">Email delivery (dashboard optional)</span>
                 </div>
                 <div className="pt-4 border-t">
                   <p className="text-xs text-primary font-semibold">
@@ -399,7 +402,7 @@ const LandingPage = () => {
                   onClick={() => startCheckout(pricePro)}
                   disabled={loadingPrice === pricePro}
                 >
-                  {loadingPrice === pricePro ? "Redirecting..." : "Get Started"}
+                  {loadingPrice === pricePro ? "Redirecting..." : "Unlock Daily Radar"}
                 </Button>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -424,8 +427,8 @@ const LandingPage = () => {
                   <span className="text-sm font-medium">Early access to new channels</span>
                 </div>
                 <div className="pt-4 border-t">
-                  <p className="text-xs text-muted-foreground italic">
-                    For serious growth hackers
+                  <p className="text-xs text-muted-foreground">
+                    For serious growth operators
                   </p>
                 </div>
               </CardContent>
@@ -498,13 +501,13 @@ const LandingPage = () => {
             </div>
             <div className="space-y-3 text-left">
               <label className="text-sm font-medium text-foreground">
-                Your Niche Keywords <span className="text-muted-foreground">(optional)</span>
+                Your Niche <span className="text-muted-foreground">(optional)</span>
               </label>
               <Input
                 type="text"
-                placeholder="e.g., SaaS marketing, indie hacking"
-                value={keywords}
-                onChange={(e) => setKeywords(e.target.value)}
+                placeholder="e.g., AI tools for indie devs; launch/pricing/growth problems"
+                value={niche}
+                onChange={(e) => setNiche(e.target.value)}
                 className="h-14 rounded-xl border-2 border-border bg-background text-base"
               />
             </div>

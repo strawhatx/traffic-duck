@@ -13,7 +13,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const pathname = usePathname();
 
-  const isKeywordsPage = pathname === "/dashboard/keywords";
+  const isKeywordsPage = pathname === "/keywords";
   const isResultsPage = pathname === "/dashboard/results";
 
   return (
@@ -43,14 +43,14 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         </div>
 
         <nav className="flex-1 p-4 space-y-2">
-          <Link href="/dashboard/keywords">
+          <Link href="/keywords">
             <Button
               variant={isKeywordsPage ? "default" : "ghost"}
               className={`w-full justify-start ${!sidebarOpen ? "px-2" : ""}`}
-              title={sidebarOpen ? "" : "Keywords"}
+              title={sidebarOpen ? "" : "Niche"}
             >
-              <Settings className="w-5 h-5 flex-shrink-0" />
-              {sidebarOpen && <span className="ml-3">Keywords</span>}
+              <Settings className="w-5 h-5 shrink-0" />
+              {sidebarOpen && <span className="ml-3">Niche</span>}
             </Button>
           </Link>
 
@@ -60,7 +60,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               className={`w-full justify-start ${!sidebarOpen ? "px-2" : ""}`}
               title={sidebarOpen ? "" : "Results"}
             >
-              <Radar className="w-5 h-5 flex-shrink-0" />
+              <Radar className="w-5 h-5 shrink-0" />
               {sidebarOpen && <span className="ml-3">Search Results</span>}
             </Button>
           </Link>
@@ -74,7 +74,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             }`}
             title={sidebarOpen ? "" : "Logout"}
           >
-            <LogOut className="w-5 h-5 flex-shrink-0" />
+            <LogOut className="w-5 h-5 shrink-0" />
             {sidebarOpen && <span className="ml-3">Logout</span>}
           </Button>
         </div>

@@ -47,6 +47,9 @@ export async function POST(req: NextRequest) {
       billing_address_collection: "auto",
       customer: customerId ?? undefined,
       line_items: [{ price: priceId, quantity: 1 }],
+      subscription_data: {
+        trial_from_plan: false,
+      },
       success_url: `${origin}/keywords`,
       cancel_url: `${origin}/#pricing`,
       client_reference_id: userId,
