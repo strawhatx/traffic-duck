@@ -1,6 +1,6 @@
 import { PlatformResult } from "./types";
 
-export async function searchReddit(query: string, limit: number = 10): Promise<PlatformResult[]> {
+export async function searchReddit(query: string, limit: number = 25): Promise<PlatformResult[]> {
   // Use public Reddit search JSON endpoint; no auth required
   const url = `https://www.reddit.com/search.json?q=${encodeURIComponent(query)}&limit=${Math.max(
     1,
@@ -13,6 +13,8 @@ export async function searchReddit(query: string, limit: number = 10): Promise<P
     const children = data?.data?.children ?? [];
     return children.map((c: any): PlatformResult => {
       const d = c?.data ?? {};
+      const createdUtc = typeof d.created_utc === "number" ? d.created_utc : undefined;
+      const createdIso = createdUtc ? new Date(createdUtc * 1000).toISOString() : undefined;
       return {
         platform: "reddit",
         title: d.title ?? "",
@@ -23,6 +25,7 @@ export async function searchReddit(query: string, limit: number = 10): Promise<P
           upvotes: d.ups ?? 0,
           comments: d.num_comments ?? 0,
           subreddit: d.subreddit ?? undefined,
+          created_at: createdIso,
         },
       };
     });

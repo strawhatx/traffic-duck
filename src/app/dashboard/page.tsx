@@ -6,9 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import NicheDialog from "@/components/NicheDialog";
 import { supabase } from "@/lib/supabaseClient";
-import { toast } from "sonner";
+import Link from "next/link";
 
 type SearchResult = {
   id: string;
@@ -23,34 +22,12 @@ type SearchResult = {
 };
 
 export default function Dashboard() {
-  const [niche, setNiche] = useState<string>("");
-  const [nicheOpen, setNicheOpen] = useState(false);
-  const [nicheInitial, setNicheInitial] = useState<string | undefined>(undefined);
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [platformFilter, setPlatformFilter] = useState<"all" | "reddit" | "twitter">("all");
   const [search, setSearch] = useState<string>("");
   const [limit, setLimit] = useState<number>(50);
-
-  useEffect(() => {
-    let cancelled = false;
-    const loadNiche = async () => {
-      const { data: userData } = await supabase.auth.getUser();
-      const userId = userData?.user?.id;
-      if (!userId) return;
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("niche_description")
-        .eq("id", userId)
-        .maybeSingle();
-      if (!cancelled) setNiche(profile?.niche_description ?? "");
-    };
-    loadNiche();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -84,31 +61,7 @@ export default function Dashboard() {
       cancelled = true;
     };
   }, [limit]);
-
-  const openNicheDialog = () => {
-    setNicheInitial(niche || "");
-    setNicheOpen(true);
-  };
-
-  const handleSaveNiche = (value: string) => {
-    void (async () => {
-      const { data: userData } = await supabase.auth.getUser();
-      const userId = userData?.user?.id;
-      if (!userId) {
-        toast.error("You must be signed in");
-        return;
-      }
-      const { error } = await supabase.from("profiles").update({ niche_description: value }).eq("id", userId);
-      if (error) {
-        toast.error("Failed to save niche");
-        return;
-      }
-      setNiche(value);
-      setNicheOpen(false);
-      toast.success("Niche updated");
-    })();
-  };
-
+  
   const filteredResults = useMemo(() => {
     const text = search.trim().toLowerCase();
     return results.filter((r) => {
@@ -142,25 +95,14 @@ export default function Dashboard() {
         {/* Header */}
         <div className="mb-8">
           <div className="flex justify-between items-start mb-6">
+        
             <div>
-              <h1 className="text-3xl mb-2">Conversation Radar</h1>
-              <p className="text-slate-600">
-                Tracking conversations for: <strong>{niche || "—"}</strong>
-              </p>
-            </div>
-            <div>
-              <Button onClick={openNicheDialog}>
-                <Radar className="w-4 h-4 mr-2 shrink-0" />
-                Update Niche
+              <Button asChild>
+                <Link href="/keywords">
+                  <Radar className="w-4 h-4 mr-2 shrink-0" />
+                  Manage Keywords
+                </Link>
               </Button>
-              <NicheDialog
-                open={nicheOpen}
-                onOpenChange={setNicheOpen}
-                initialValue={nicheInitial}
-                onSubmit={handleSaveNiche}
-                title="Describe Your Niche"
-                submitLabel="Save Niche"
-              />
             </div>
           </div>
 

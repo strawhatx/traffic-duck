@@ -51,6 +51,7 @@ export async function searchTwitter(query: string, limit: number = 10): Promise<
             retweets: metrics?.retweet_count ?? 0,
             quotes: metrics?.quote_count ?? 0,
             comments: metrics?.reply_count ?? 0,
+            created_at: t?.created_at || undefined,
           },
         };
       });
