@@ -17,7 +17,7 @@ type SearchResult = {
   author: string;
   url: string;
   engagement: Record<string, unknown> | null;
-  intent: string | null;
+  why_matters: string | null;
   discovered_at: string | null;
 };
 
@@ -43,7 +43,7 @@ export default function Dashboard() {
 
       const { data, error } = await supabase
         .from("search_results")
-        .select("id, platform, title, content, author, url, engagement, intent, discovered_at")
+        .select("id, platform, title, content, author, url, engagement, why_matters, discovered_at")
         .order("discovered_at", { ascending: false, nullsFirst: false })
         .limit(limit);
 
@@ -66,7 +66,7 @@ export default function Dashboard() {
     const text = search.trim().toLowerCase();
     return results.filter((r) => {
       const matchesPlatform = platformFilter === "all" ? true : r.platform === platformFilter;
-      const hay = `${r.title ?? ""} ${r.content ?? ""} ${r.author ?? ""} ${r.intent ?? ""}`.toLowerCase();
+      const hay = `${r.title ?? ""} ${r.content ?? ""} ${r.author ?? ""} ${r.why_matters ?? ""}`.toLowerCase();
       const matchesSearch = text.length === 0 ? true : hay.includes(text);
       return matchesPlatform && matchesSearch;
     });
@@ -227,7 +227,6 @@ export default function Dashboard() {
                       <div>
                         <h3 className="text-lg mb-1">{conversation.title}</h3>
                         <p className="text-sm text-slate-600">
-                          {conversation.intent ? `${conversation.intent} · ` : ""}
                           {conversation.author}
                         </p>
                       </div>
@@ -237,12 +236,12 @@ export default function Dashboard() {
                       <p className="text-slate-700 mb-3">{conversation.content}</p>
                     )}
 
-                    {(engagement && (conversation.intent || comments || upvotes || likes)) && (
+                    {(engagement && (conversation.why_matters || comments || upvotes || likes)) && (
                       <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
                         <p className="text-sm">
                           <strong>Why it matters:</strong>{" "}
-                          {typeof (engagement as any).why_matters === "string"
-                            ? (engagement as any).why_matters
+                          {conversation.why_matters
+                            ? conversation.why_matters
                             : "High-signal audience overlap and actionable conversation."}
                         </p>
                       </div>

@@ -3,6 +3,7 @@ import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { resolveTierFromProfile } from "@/lib/subscription";
 import { searchReddit } from "@/lib/platforms/reddit";
 import { searchTwitter } from "@/lib/platforms/twitter";
+import { searchHackerNews } from "@/lib/platforms/hackernews";
 import type { PlatformResult } from "@/lib/platforms/types";
 import { judgeQueryToPostMatch } from "@/lib/ai";
 import { recencyBonusFromEngagement, engagementBonusFromEngagement } from "@/lib/scoring";
@@ -35,7 +36,7 @@ async function countTodayResultsForKeyword(userId: string, keywordId: string): P
 async function insertResults(
   userId: string,
   keywordId: string,
-  platform: "reddit" | "twitter",
+  platform: "reddit" | "twitter" | "hackernews",
   items: PlatformResult[],
   withAnalysis: boolean,
   analysisByUrl?: Record<string, { why?: string; path?: string }>
@@ -78,7 +79,7 @@ type UserKeyword = {
 };
 
 type TierConfig = {
-  allowedPlatforms: ReadonlyArray<"reddit" | "twitter">;
+  allowedPlatforms: ReadonlyArray<"reddit" | "twitter" | "hackernews">;
   maxPerIntentPerDay: number;
   withAnalysis: boolean;
 };
@@ -91,24 +92,22 @@ function buildQueryString(keyword: string): string {
   return /\s/.test(keyword) ? `"${keyword}"` : keyword;
 }
 
-
-
 const MAX_AI_EVAL = 40; // bound cost per keyword per platform
 
 function getTierConfig(tier: Tier): TierConfig {
   const allowedPlatforms =
     tier === "free"
-      ? (["reddit"] as const)
+      ? (["reddit", "hackernews"] as const)
       : tier === "core"
-      ? (["reddit"] as const)
-      : (["reddit", "twitter"] as const);
+        ? (["reddit", "hackernews"] as const)
+        : (["reddit", "twitter", "hackernews"] as const);
   const maxPerIntentPerDay = tier === "pro" ? 20 : tier === "core" ? 7 : 2;
   const withAnalysis = tier !== "free";
   return { allowedPlatforms, maxPerIntentPerDay, withAnalysis };
 }
 
 async function runPlatformJob(params: {
-  platform: "reddit" | "twitter";
+  platform: "reddit" | "twitter" | "hackernews";
   userId: string;
   userKeywordRows: UserKeyword[];
   dailyCap: number;
@@ -132,10 +131,15 @@ async function runPlatformJob(params: {
     const seen = await fetchExistingUrls(userId, kw.id);
     const collected: PlatformResult[] = [];
     const queryStr = buildQueryString(kw.keyword);
-    const batch =
-      platform === "reddit"
-        ? await searchReddit(queryStr, Math.max(10, dailyRemaining * 2))
-        : await searchTwitter(queryStr, Math.max(10, dailyRemaining * 3));
+    let batch: PlatformResult[] = [];
+    if (platform === "reddit") {
+      batch = await searchReddit(queryStr, Math.max(10, dailyRemaining * 2));
+    } else if (platform === "twitter") {
+      batch = await searchTwitter(queryStr, Math.max(10, dailyRemaining * 3));
+    } else if (platform === "hackernews") {
+      batch = await searchHackerNews(queryStr, Math.max(10, dailyRemaining * 2));
+    }
+
     for (const r of batch) {
       if (!r.url || seen.has(r.url)) continue;
       seen.add(r.url);
@@ -172,10 +176,10 @@ async function runPlatformJob(params: {
 }
 
 export async function POST(req: NextRequest) {
-  // const secret = req.headers.get("x-cron-secret");
-  // if (!process.env.CRON_SECRET || secret !== process.env.CRON_SECRET) {
-  // return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  //}
+  const secret = req.headers.get("x-cron-secret");
+  if (!process.env.CRON_SECRET || secret !== process.env.CRON_SECRET) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
   try {
     // Load active keywords for all users
@@ -216,7 +220,7 @@ export async function POST(req: NextRequest) {
       const { allowedPlatforms, maxPerIntentPerDay, withAnalysis } = getTierConfig(tier as Tier);
 
       // Platform-specific queries and ingestion (lean)
-      const platformArray = Array.from(allowedPlatforms) as Array<"reddit" | "twitter">;
+      const platformArray = Array.from(allowedPlatforms) as Array<"reddit" | "twitter" | "hackernews">;
       for (const platform of platformArray) {
         totalInserted += await runPlatformJob({
           platform,

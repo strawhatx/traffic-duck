@@ -14,7 +14,7 @@ import { Switch } from "./ui/switch";
 
 type Platforms = {
   reddit: boolean;
-  instagram: boolean;
+  hackernews: boolean;
   twitter: boolean;
 };
 
@@ -31,13 +31,13 @@ interface KeywordDialogProps {
   title?: string;
   submitLabel?: string;
   trigger?: React.ReactNode;
-  allowInstagram?: boolean;
+  allowHackerNews?: boolean;
   allowTwitter?: boolean;
 }
 
 const defaultPlatforms: Platforms = {
   reddit: true,
-  instagram: true,
+  hackernews: true,
   twitter: false,
 };
 
@@ -49,7 +49,7 @@ const KeywordDialog: React.FC<KeywordDialogProps> = ({
   title,
   submitLabel,
   trigger,
-  allowInstagram = true,
+  allowHackerNews = true,
   allowTwitter = false,
 }) => {
   const [draft, setDraft] = React.useState<KeywordDraft>({
@@ -128,25 +128,25 @@ const KeywordDialog: React.FC<KeywordDialogProps> = ({
 
               <div className="flex items-center justify-between p-3 border rounded-lg">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-pink-100 rounded-lg flex items-center justify-center">
-                    <span className="text-lg">📷</span>
+                  <div className="w-10 h-10 bg-orange-200 rounded-lg flex items-center justify-center">
+                    <span className="text-lg">🟧</span>
                   </div>
                   <div>
-                    <p className="font-medium">Instagram</p>
+                    <p className="font-medium">Hacker News</p>
                     <p className="text-sm text-slate-600">
-                      {allowInstagram ? "Included on Core and Pro" : "Available on Core and Pro"}
+                      {allowHackerNews ? "Included" : "Unavailable"}
                     </p>
                   </div>
                 </div>
                 <Switch
-                  checked={draft.platforms.instagram && allowInstagram}
+                  checked={draft.platforms.hackernews && allowHackerNews}
                   onCheckedChange={(checked: boolean) =>
                     setDraft((d) => ({
                       ...d,
-                      platforms: { ...d.platforms, instagram: checked },
+                      platforms: { ...d.platforms, hackernews: checked },
                     }))
                   }
-                  disabled={!allowInstagram}
+                  disabled={!allowHackerNews}
                 />
               </div>
 

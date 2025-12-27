@@ -1,4 +1,4 @@
-export type PlatformSource = "reddit" | "instagram" | "twitter";
+export type PlatformSource = "reddit" | "twitter" | "hackernews";
 
 export type PlatformResult = {
   platform: PlatformSource;

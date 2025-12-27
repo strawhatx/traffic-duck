@@ -1,5 +1,3 @@
-import type { PlatformResult } from "@/lib/platforms/types";
-
 
 const JOB_RE = /\b(job|hiring|role|position)\b/i;
 const PROMO_RE =

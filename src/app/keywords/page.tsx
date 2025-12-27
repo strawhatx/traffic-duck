@@ -5,7 +5,7 @@ import { Radar, Plus, Trash2, Edit2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import KeywordDialog from "@/components/KeywordDialog";
+import KeywordDialog, { type KeywordDraft as DialogKeywordDraft } from "../../components/KeywordDialog";
 import { supabase } from "@/lib/supabaseClient";
 import { resolveTierFromProfile, SubscriptionTier } from "@/lib/subscription";
 import { toast } from "sonner";
@@ -16,7 +16,7 @@ interface Keyword {
   phrase: string;
   platforms: {
     reddit: boolean;
-    instagram: boolean;
+    hackernews: boolean;
     twitter: boolean;
   };
   createdAt: string;
@@ -28,8 +28,7 @@ export default function Keywords() {
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  type KeywordDraft = Pick<Keyword, "phrase" | "platforms">;
-  const [dialogInitial, setDialogInitial] = useState<KeywordDraft | undefined>(undefined);
+  const [dialogInitial, setDialogInitial] = useState<DialogKeywordDraft | undefined>(undefined);
   const [tier, setTier] = useState<SubscriptionTier>("free");
 
   // Load subscription tier for current user
@@ -55,7 +54,7 @@ export default function Keywords() {
   // Map DB platform[] to UI booleans
   const arrayToPlatforms = (arr: string[]) => ({
     reddit: arr?.includes("reddit") ?? false,
-    instagram: arr?.includes("instagram") ?? false,
+    hackernews: arr?.includes("hackernews") ?? false,
     twitter: arr?.includes("twitter") ?? false,
   });
 
@@ -63,7 +62,7 @@ export default function Keywords() {
   const platformsToArray = (platforms: Keyword["platforms"]) => {
     const items: string[] = [];
     if (platforms.reddit) items.push("reddit");
-    if (platforms.instagram) items.push("instagram");
+    if (platforms.hackernews) items.push("hackernews");
     if (platforms.twitter) items.push("twitter");
     return items.length > 0 ? items : ["reddit"];
   };
@@ -124,7 +123,7 @@ export default function Keywords() {
     setEditingId(null);
     setDialogInitial({
       phrase: "",
-      platforms: { reddit: true, instagram: true, twitter: false },
+      platforms: { reddit: true, hackernews: false, twitter: false },
     });
     setIsDialogOpen(true);
   };
@@ -133,18 +132,24 @@ export default function Keywords() {
     setEditingId(keyword.id);
     setDialogInitial({
       phrase: keyword.phrase,
-      platforms: { ...keyword.platforms },
+      platforms: {
+        reddit: keyword.platforms.reddit,
+        hackernews: false,
+        twitter: keyword.platforms.twitter,
+      },
     });
     setIsDialogOpen(true);
   };
 
-  const handleSubmitDraft = (draft: KeywordDraft) => {
+  const handleSubmitDraft = (draft: DialogKeywordDraft) => {
     // Enforce platform availability by tier
+    const prev = editingId ? keywords.find((k) => k.id === editingId) : undefined;
+    const desiredHackerNews = prev ? prev.platforms.hackernews : true;
     const safePlatforms = {
-      ...draft.platforms,
-      instagram: tier !== "free" ? draft.platforms.instagram : false,
+      reddit: draft.platforms.reddit,
+      hackernews: desiredHackerNews,
       twitter: tier === "pro" ? draft.platforms.twitter : false,
-    };
+    } as Keyword["platforms"];
     const platformArr = platformsToArray(safePlatforms);
     void (async () => {
       if (!userId) {
@@ -200,7 +205,7 @@ export default function Keywords() {
         <div className="mb-8">
           <h1 className="text-3xl mb-2">Manage Keywords</h1>
           <p className="text-slate-600">
-            Add keywords or phrases to track across Reddit, Instagram, and Twitter.
+            Add keywords or phrases to track across Reddit, Hacker News, and Twitter.
           </p>
         </div>
 
@@ -218,7 +223,7 @@ export default function Keywords() {
           onSubmit={handleSubmitDraft}
           title={editingId === null ? "Add New Keyword" : "Edit Keyword"}
           submitLabel={editingId === null ? "Add Keyword" : "Save Changes"}
-          allowInstagram={tier !== "free"}
+          allowHackerNews={true}
           allowTwitter={tier === "pro"}
         />
 

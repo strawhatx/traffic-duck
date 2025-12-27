@@ -5,7 +5,7 @@ export async function searchReddit(query: string, limit: number = 25): Promise<P
   const url = `https://www.reddit.com/search.json?q=${encodeURIComponent(query)}&limit=${Math.max(
     1,
     Math.min(limit, 25)
-  )}&sort=new`;
+  )}&sort=relevance`;
   try {
     const res = await fetch(url, { headers: { "User-Agent": "TrafficDuckBot/1.0" } });
     if (!res.ok) return [];
