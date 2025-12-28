@@ -143,11 +143,9 @@ export default function Keywords() {
 
   const handleSubmitDraft = (draft: DialogKeywordDraft) => {
     // Enforce platform availability by tier
-    const prev = editingId ? keywords.find((k) => k.id === editingId) : undefined;
-    const desiredHackerNews = prev ? prev.platforms.hackernews : true;
     const safePlatforms = {
       reddit: draft.platforms.reddit,
-      hackernews: desiredHackerNews,
+      hackernews: tier !== "free" ? (draft.platforms as any).hackernews === true : false,
       twitter: tier === "pro" ? draft.platforms.twitter : false,
     } as Keyword["platforms"];
     const platformArr = platformsToArray(safePlatforms);
@@ -223,7 +221,7 @@ export default function Keywords() {
           onSubmit={handleSubmitDraft}
           title={editingId === null ? "Add New Keyword" : "Edit Keyword"}
           submitLabel={editingId === null ? "Add Keyword" : "Save Changes"}
-          allowHackerNews={true}
+          allowHackerNews={tier !== "free"}
           allowTwitter={tier === "pro"}
         />
 
@@ -233,7 +231,7 @@ export default function Keywords() {
             Your Keywords ({keywords.length})
           </h2>
           <p className="text-sm text-slate-600">
-            Free plan: Max 1 niche · Core plan: Max 1 niche · Pro plan: Max 1 niche
+            
           </p>
         </div>
 

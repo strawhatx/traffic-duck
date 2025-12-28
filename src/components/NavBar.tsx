@@ -6,22 +6,52 @@ import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
+import { resolveTierFromProfile, type SubscriptionTier } from "@/lib/subscription";
 
 export default function NavBar() {
   const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [tier, setTier] = useState<SubscriptionTier>("free");
 
   useEffect(() => {
     let isMounted = true;
 
     const prime = async () => {
-      const { data } = await supabase.auth.getUser();
-      if (isMounted) setIsAuthenticated(!!data?.user);
+      const { data: userData } = await supabase.auth.getUser();
+      const authed = !!userData?.user;
+      if (isMounted) setIsAuthenticated(authed);
+      if (authed) {
+        const userId = userData?.user?.id;
+        if (userId) {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("subscription_status, price_id")
+            .eq("id", userId)
+            .maybeSingle();
+          if (isMounted) setTier(resolveTierFromProfile(profile ?? undefined));
+        }
+      } else {
+        if (isMounted) setTier("free");
+      }
     };
     prime();
 
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (isMounted) setIsAuthenticated(!!session?.user);
+      const authed = !!session?.user;
+      if (isMounted) setIsAuthenticated(authed);
+      if (authed) {
+        const userId = session?.user?.id;
+        void (async () => {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("subscription_status, price_id")
+            .eq("id", userId)
+            .maybeSingle();
+          if (isMounted) setTier(resolveTierFromProfile(profile ?? undefined));
+        })();
+      } else {
+        if (isMounted) setTier("free");
+      }
     });
 
     return () => {
@@ -47,6 +77,11 @@ export default function NavBar() {
             <Link href="/dashboard">
               <Button variant="ghost">Dashboard</Button>
             </Link>
+            {isAuthenticated && tier !== "pro" ? (
+              <Link href="/upgrade">
+                <Button variant="outline">Upgrade</Button>
+              </Link>
+            ) : null}
             {isAuthenticated ? (
               <Button variant="ghost" onClick={handleSignOut}>
                 Logout

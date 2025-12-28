@@ -1,3 +1,4 @@
+import "server-only";
 import { PlatformResult } from "./types";
 
 export async function searchReddit(query: string, limit: number = 25): Promise<PlatformResult[]> {

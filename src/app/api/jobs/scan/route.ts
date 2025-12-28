@@ -97,7 +97,7 @@ const MAX_AI_EVAL = 40; // bound cost per keyword per platform
 function getTierConfig(tier: Tier): TierConfig {
   const allowedPlatforms =
     tier === "free"
-      ? (["reddit", "hackernews"] as const)
+      ? (["reddit"] as const)
       : tier === "core"
         ? (["reddit", "hackernews"] as const)
         : (["reddit", "twitter", "hackernews"] as const);

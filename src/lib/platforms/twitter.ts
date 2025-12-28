@@ -1,3 +1,4 @@
+import "server-only";
 import { PlatformResult } from "./types";
 
 export async function searchTwitter(query: string, limit: number = 10): Promise<PlatformResult[]> {

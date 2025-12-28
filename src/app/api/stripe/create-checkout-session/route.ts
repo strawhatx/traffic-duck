@@ -4,12 +4,13 @@ import Stripe from "stripe";
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseAdmin";
 
-const stripeSecret = process.env.STRIPE_SECRET_KEY!;
 
 export async function POST(req: NextRequest) {
+  const stripeSecret = process.env.STRIPE_SECRET_KEY!;
   if (!stripeSecret) {
-    return NextResponse.json({ error: "Stripe not configured" }, { status: 500 });
+    return NextResponse.json({ error: "Stripe not configured 2" }, { status: 500 });
   }
+
   try {
     const { priceId, userId } = (await req.json()) as { priceId?: string; userId?: string };
     if (!priceId || !userId) {
@@ -47,9 +48,6 @@ export async function POST(req: NextRequest) {
       billing_address_collection: "auto",
       customer: customerId ?? undefined,
       line_items: [{ price: priceId, quantity: 1 }],
-      subscription_data: {
-        trial_from_plan: false,
-      },
       success_url: `${origin}/keywords`,
       cancel_url: `${origin}/#pricing`,
       client_reference_id: userId,

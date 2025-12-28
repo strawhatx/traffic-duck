@@ -1,3 +1,4 @@
+import "server-only";
 import type { PlatformResult } from "./types";
 
 // Hacker News via Algolia API

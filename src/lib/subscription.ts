@@ -43,4 +43,45 @@ export function getPlanLimits(tier: SubscriptionTier): PlanLimits {
   }
 }
 
+export type UpgradePlan = {
+  id: Exclude<SubscriptionTier, "free">;
+  name: string;
+  priceId: string | undefined;
+  priceLabel: string;
+  period: string;
+  features: string[];
+};
+
+export function getUpgradePlans(): UpgradePlan[] {
+  return [
+    {
+      id: "core",
+      name: "Core",
+      priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_CORE,
+      priceLabel: "$29",
+      period: "per month",
+      features: [
+        "Reddit + Hacker News monitoring",
+        "Weekly conversation cap",
+        '"Why it matters" insights',
+        "3 keywords niches",
+      ],
+    },
+    {
+      id: "pro",
+      name: "Pro",
+      priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO,
+      priceLabel: "$59",
+      period: "per month",
+      features: [
+        "All platforms: Reddit, Hacker News, Twitter/X",
+        "Higher/Unlimited conversations",
+        "Priority support",
+        "Advanced analytics",
+        "Custom alerts",
+        "10 keywords niches",
+      ],
+    },
+  ];
+}
 

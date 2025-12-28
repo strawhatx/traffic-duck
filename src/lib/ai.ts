@@ -1,3 +1,5 @@
+import "server-only";
+
 // Simple AI helpers with fallback across Grok → OpenAI → Gemini.
 // Implemented with fetch to avoid extra SDK dependencies.
 
