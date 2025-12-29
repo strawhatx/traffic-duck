@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { resolveTierFromProfile, type SubscriptionTier } from "@/lib/subscription";
+import { Twitter } from "lucide-react";
 
 export default function NavBar() {
   const router = useRouter();
@@ -76,6 +77,11 @@ export default function NavBar() {
           <div className="flex items-center gap-4">
             <Link href="/dashboard">
               <Button variant="ghost">Dashboard</Button>
+            </Link>
+            <Link href="https://twitter.com/heynathanielj" target="_blank" rel="noopener noreferrer">
+              <Button variant="ghost" size="icon">
+                <Twitter className="w-5 h-5" />
+              </Button>
             </Link>
             {isAuthenticated && tier !== "builder" ? (
               <Link href="/upgrade">
