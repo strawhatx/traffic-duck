@@ -99,9 +99,9 @@ export default function UpgradePage() {
                 <h2 className="text-xl">Current Plan</h2>
                 <Badge
                   className={
-                    tier === "pro"
+                    tier === "builder"
                       ? "bg-purple-600 text-white"
-                      : tier === "core"
+                      : tier === "early"
                       ? "bg-blue-600 text-white"
                       : "bg-slate-600 text-white"
                   }
@@ -110,9 +110,9 @@ export default function UpgradePage() {
                 </Badge>
               </div>
               <p className="text-slate-700 mb-4">
-                {tier === "pro"
+                {tier === "builder"
                   ? "All platforms + highest limits"
-                  : tier === "core"
+                  : tier === "early"
                   ? "Reddit + Hacker News with weekly caps"
                   : "Reddit monitoring with basic limits"}
               </p>
@@ -122,7 +122,7 @@ export default function UpgradePage() {
                 </p>
               </div>
             </div>
-            {tier !== "pro" && (
+            {tier !== "builder" && (
               <Button asChild className="gap-2">
                 <Link href="/upgrade">
                   <Crown className="w-4 h-4" />
@@ -139,13 +139,13 @@ export default function UpgradePage() {
 
         <div className="grid md:grid-cols-2 gap-6">
           {plans.map((plan) => {
-            const isPro = plan.id === "pro";
+            const isBuilder = plan.id === "builder";
             return (
               <Card
                 key={plan.id}
-                className={`p-6 relative ${isPro ? "border-2 border-purple-300" : ""}`}
+                className={`p-6 relative ${isBuilder ? "border-2 border-purple-300" : ""}`}
               >
-                {isPro && (
+                {isBuilder && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                     <Badge className="bg-purple-600 text-white gap-1">
                       <Crown className="w-3 h-3" />
@@ -172,11 +172,11 @@ export default function UpgradePage() {
                 </div>
 
                 <Button
-                  className={`w-full gap-2 ${isPro ? "bg-purple-600 hover:bg-purple-700" : ""}`}
+                  className={`w-full gap-2 ${isBuilder ? "bg-purple-600 hover:bg-purple-700" : ""}`}
                   disabled={loadingId === plan.id}
                   onClick={() => handleUpgrade(plan)}
                 >
-                  {isPro && <Zap className="w-4 h-4" />}
+                  {isBuilder && <Zap className="w-4 h-4" />}
                   {loadingId === plan.id ? "Redirecting…" : `Choose ${plan.name}`}
                 </Button>
               </Card>
@@ -190,7 +190,7 @@ export default function UpgradePage() {
           <div className="grid md:grid-cols-3 gap-4">
             <div
               className={`p-4 rounded-lg border-2 ${
-                tier === "free" || tier === "core" || tier === "pro"
+                tier === "free" || tier === "early" || tier === "builder"
                   ? "border-green-300 bg-green-50"
                   : "border-slate-200 bg-slate-50"
               }`}
@@ -204,30 +204,30 @@ export default function UpgradePage() {
 
             <div
               className={`p-4 rounded-lg border-2 ${
-                tier === "core" || tier === "pro" ? "border-green-300 bg-green-50" : "border-slate-200 bg-slate-50"
+                tier === "early" || tier === "builder" ? "border-green-300 bg-green-50" : "border-slate-200 bg-slate-50"
               }`}
             >
               <div className="flex items-center justify-between mb-2">
                 <h3 className="font-medium">Hacker News</h3>
-                <Badge className={tier === "core" || tier === "pro" ? "bg-green-600 text-white" : "bg-slate-400 text-white"}>
-                  {tier === "core" || tier === "pro" ? "Active" : "Locked"}
+                <Badge className={tier === "early" || tier === "builder" ? "bg-green-600 text-white" : "bg-slate-400 text-white"}>
+                  {tier === "early" || tier === "builder" ? "Active" : "Locked"}
                 </Badge>
               </div>
-              <p className="text-sm text-slate-600">Available on Core & Pro</p>
+              <p className="text-sm text-slate-600">Available on Early & Builder</p>
             </div>
 
             <div
               className={`p-4 rounded-lg border-2 ${
-                tier === "pro" ? "border-green-300 bg-green-50" : "border-slate-200 bg-slate-50"
+                tier === "builder" ? "border-green-300 bg-green-50" : "border-slate-200 bg-slate-50"
               }`}
             >
               <div className="flex items-center justify-between mb-2">
                 <h3 className="font-medium">Twitter / X</h3>
-                <Badge className={tier === "pro" ? "bg-green-600 text-white" : "bg-slate-400 text-white"}>
-                  {tier === "pro" ? "Active" : "Locked"}
+                <Badge className={tier === "builder" ? "bg-green-600 text-white" : "bg-slate-400 text-white"}>
+                  {tier === "builder" ? "Active" : "Locked"}
                 </Badge>
               </div>
-              <p className="text-sm text-slate-600">Available on Pro only</p>
+              <p className="text-sm text-slate-600">Available on Builder only</p>
             </div>
           </div>
         </Card>

@@ -114,10 +114,10 @@ export default function Keywords() {
   };
 
   const openAddDialog = () => {
-    // Enforce 1 keyword for free/core
-    const maxKeywords = 1;
-    if ((tier === "free" || tier === "core") && keywords.length >= maxKeywords) {
-      toast.error("Limit reached. Upgrade to Pro for more capacity.");
+    // Enforce keyword caps by plan: free=1, early=1, builder=3
+    const maxKeywords = tier === "builder" ? 3 : 1;
+    if (keywords.length >= maxKeywords) {
+      toast.error(`Limit reached: ${maxKeywords} keywords on ${tier} plan.`);
       return;
     }
     setEditingId(null);
@@ -134,7 +134,7 @@ export default function Keywords() {
       phrase: keyword.phrase,
       platforms: {
         reddit: keyword.platforms.reddit,
-        hackernews: false,
+        hackernews: keyword.platforms.hackernews,
         twitter: keyword.platforms.twitter,
       },
     });
@@ -146,7 +146,7 @@ export default function Keywords() {
     const safePlatforms = {
       reddit: draft.platforms.reddit,
       hackernews: tier !== "free" ? (draft.platforms as any).hackernews === true : false,
-      twitter: tier === "pro" ? draft.platforms.twitter : false,
+      twitter: tier === "builder" ? draft.platforms.twitter : false,
     } as Keyword["platforms"];
     const platformArr = platformsToArray(safePlatforms);
     void (async () => {
@@ -222,7 +222,7 @@ export default function Keywords() {
           title={editingId === null ? "Add New Keyword" : "Edit Keyword"}
           submitLabel={editingId === null ? "Add Keyword" : "Save Changes"}
           allowHackerNews={tier !== "free"}
-          allowTwitter={tier === "pro"}
+          allowTwitter={tier === "builder"}
         />
 
         {/* Keywords List */}
@@ -230,9 +230,7 @@ export default function Keywords() {
           <h2 className="text-xl">
             Your Keywords ({keywords.length})
           </h2>
-          <p className="text-sm text-slate-600">
-            
-          </p>
+          <p className="text-sm text-slate-600">Free: Max 1 · Early: Max 1 · Builder: Max 3</p>
         </div>
 
     
@@ -253,6 +251,11 @@ export default function Keywords() {
                       {keyword.platforms.reddit && (
                         <Badge className="bg-orange-100 text-orange-800">
                           Reddit
+                        </Badge>
+                      )}
+                      {keyword.platforms.hackernews && (
+                        <Badge className="bg-amber-100 text-amber-800">
+                          Hacker News
                         </Badge>
                       )}
                       {keyword.platforms.twitter && (

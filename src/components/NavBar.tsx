@@ -77,7 +77,7 @@ export default function NavBar() {
             <Link href="/dashboard">
               <Button variant="ghost">Dashboard</Button>
             </Link>
-            {isAuthenticated && tier !== "pro" ? (
+            {isAuthenticated && tier !== "builder" ? (
               <Link href="/upgrade">
                 <Button variant="outline">Upgrade</Button>
               </Link>

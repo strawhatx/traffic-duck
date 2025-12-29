@@ -1,15 +1,15 @@
-export type SubscriptionTier = "free" | "core" | "pro";
+export type SubscriptionTier = "free" | "early" | "builder";
 
 export function resolveTierFromProfile(profile?: {
   subscription_status?: string | null;
   price_id?: string | null;
 }): SubscriptionTier {
   const active = profile?.subscription_status === "active" || profile?.subscription_status === "trialing";
-  const corePrice = process.env.NEXT_PUBLIC_STRIPE_PRICE_CORE;
-  const proPrice = process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO;
+  const earlyPrice = process.env.NEXT_PUBLIC_STRIPE_PRICE_EARLY || process.env.NEXT_PUBLIC_STRIPE_PRICE_CORE;
+  const builderPrice = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUILDER || process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO;
   if (active) {
-    if (profile?.price_id && proPrice && profile.price_id === proPrice) return "pro";
-    if (profile?.price_id && corePrice && profile.price_id === corePrice) return "core";
+    if (profile?.price_id && builderPrice && profile.price_id === builderPrice) return "builder";
+    if (profile?.price_id && earlyPrice && profile.price_id === earlyPrice) return "early";
   }
   return "free";
 }
@@ -29,14 +29,14 @@ export function getPlanLimits(tier: SubscriptionTier): PlanLimits {
         // Enforced server-side via trigger on search_results
         maxLifetimeResults: 2,
       };
-    case "core":
+    case "early":
       return {
         maxKeywords: 1,
-        maxWeeklyResultsPerKeyword: 12,
+        maxWeeklyResultsPerKeyword: 21,
       };
-    case "pro":
+    case "builder":
       return {
-        maxKeywords: "unlimited",
+        maxKeywords: 3,
         maxWeeklyResultsPerKeyword: "unlimited",
         maxLifetimeResults: "unlimited",
       };
@@ -55,31 +55,34 @@ export type UpgradePlan = {
 export function getUpgradePlans(): UpgradePlan[] {
   return [
     {
-      id: "core",
-      name: "Core",
-      priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_CORE,
-      priceLabel: "$29",
+      id: "early",
+      name: "Early Access",
+      priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_EARLY || process.env.NEXT_PUBLIC_STRIPE_PRICE_CORE,
+      priceLabel: "$9",
       period: "per month",
       features: [
-        "Reddit + Hacker News monitoring",
-        "Weekly conversation cap",
-        '"Why it matters" insights',
-        "3 keywords niches",
+        "1 keyword",
+        "Daily automated scan",
+        "2–3 high-signal conversations per day",
+        "Reddit + Hacker News",
+        "Past 7 days",
+        "Email digest",
+        "Relevance-sorted (default)",
       ],
     },
     {
-      id: "pro",
-      name: "Pro",
-      priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO,
-      priceLabel: "$59",
+      id: "builder",
+      name: "Builder",
+      priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_BUILDER || process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO,
+      priceLabel: "$29",
       period: "per month",
       features: [
-        "All platforms: Reddit, Hacker News, Twitter/X",
-        "Higher/Unlimited conversations",
-        "Priority support",
-        "Advanced analytics",
-        "Custom alerts",
-        "10 keywords niches",
+        "Up to 3 keywords",
+        "Daily or weekly scans",
+        "Reddit + HN + X",
+        "Engagement + relevance sorting",
+        "30-day history",
+        "Multiple projects",
       ],
     },
   ];

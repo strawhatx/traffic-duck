@@ -6,8 +6,11 @@ export async function searchTwitter(query: string, limit: number = 10): Promise<
   if (!bearer) return [];
 
   const maxResults = Math.max(10, Math.min(limit, 50)); // Twitter API v2 allows 10-100; keep modest
+  const trimmed = String(query || "").trim();
+  const needsQuotes = /\s/.test(trimmed) && !/^".*"$/.test(trimmed);
+  const q = needsQuotes ? `"${trimmed}"` : trimmed;
   const params = new URLSearchParams({
-    query: `${query} -is:retweet lang:en`,
+    query: `${q} -is:retweet lang:en`,
     max_results: String(maxResults),
     "tweet.fields": "public_metrics,created_at,lang",
     expansions: "author_id",

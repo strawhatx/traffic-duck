@@ -3,10 +3,14 @@ import { PlatformResult } from "./types";
 
 export async function searchReddit(query: string, limit: number = 25): Promise<PlatformResult[]> {
   // Use public Reddit search JSON endpoint; no auth required
-  const url = `https://www.reddit.com/search.json?q=${encodeURIComponent(query)}&limit=${Math.max(
+  // Wrap multi-word queries in quotes to enforce exact phrase matching
+  const trimmed = String(query || "").trim();
+  const needsQuotes = /\s/.test(trimmed) && !/^".*"$/.test(trimmed);
+  const q = needsQuotes ? `"${trimmed}"` : trimmed;
+  const url = `https://www.reddit.com/search.json?q=${encodeURIComponent(q)}&limit=${Math.max(
     1,
     Math.min(limit, 25)
-  )}&sort=relevance`;
+  )}&sort=new`;
   try {
     const res = await fetch(url, { headers: { "User-Agent": "TrafficDuckBot/1.0" } });
     if (!res.ok) return [];

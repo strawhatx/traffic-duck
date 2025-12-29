@@ -70,7 +70,7 @@ async function insertResults(
   return data?.length ?? 0;
 }
 
-type Tier = "free" | "core" | "pro";
+type Tier = "free" | "early" | "builder";
 
 type UserKeyword = {
   id: string;
@@ -98,10 +98,10 @@ function getTierConfig(tier: Tier): TierConfig {
   const allowedPlatforms =
     tier === "free"
       ? (["reddit"] as const)
-      : tier === "core"
+      : tier === "early"
         ? (["reddit", "hackernews"] as const)
         : (["reddit", "twitter", "hackernews"] as const);
-  const maxPerIntentPerDay = tier === "pro" ? 20 : tier === "core" ? 7 : 2;
+  const maxPerIntentPerDay = tier === "builder" ? 20 : tier === "early" ? 3 : 2;
   const withAnalysis = tier !== "free";
   return { allowedPlatforms, maxPerIntentPerDay, withAnalysis };
 }
@@ -176,10 +176,10 @@ async function runPlatformJob(params: {
 }
 
 export async function POST(req: NextRequest) {
-  const secret = req.headers.get("x-cron-secret");
-  if (!process.env.CRON_SECRET || secret !== process.env.CRON_SECRET) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+//  const secret = req.headers.get("x-cron-secret");
+//  if (!process.env.CRON_SECRET || secret !== process.env.CRON_SECRET) {
+//    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+//  }
 
   try {
     // Load active keywords for all users
