@@ -97,13 +97,22 @@ const MAX_AI_EVAL = 40; // bound cost per keyword per platform
 function getTierConfig(tier: Tier): TierConfig {
   const allowedPlatforms =
     tier === "free"
-      ? (["reddit"] as const)
+      ? ([] as const)
       : tier === "early"
-        ? (["reddit", "hackernews"] as const)
+        ? (["twitter"] as const)
         : (["reddit", "twitter", "hackernews"] as const);
-  const maxPerIntentPerDay = tier === "builder" ? 20 : tier === "early" ? 3 : 2;
+  const maxPerIntentPerDay = tier === "builder" ? 7 : tier === "early" ? 3 : 0;
   const withAnalysis = tier !== "free";
   return { allowedPlatforms, maxPerIntentPerDay, withAnalysis };
+}
+
+function getRetentionDays(tier: Tier): number {
+  // Free: no history (purge everything older than "now")
+  // Early: 30 days
+  // Builder: 60 days
+  if (tier === "early") return 30;
+  if (tier === "builder") return 60;
+  return 0;
 }
 
 async function runPlatformJob(params: {
@@ -230,6 +239,19 @@ export async function POST(req: NextRequest) {
           withAnalysisFlag: withAnalysis,
         });
       }
+
+      // Retention policy (FIFO by discovered_at)
+      const retentionDays = getRetentionDays(tier as Tier);
+      const cutoffIso =
+        retentionDays > 0
+          ? new Date(Date.now() - retentionDays * 24 * 60 * 60 * 1000).toISOString()
+          : new Date().toISOString();
+      // Delete older than cutoff for this user
+      await supabaseAdmin
+        .from("search_results")
+        .delete()
+        .eq("user_id", userId)
+        .lt("discovered_at", cutoffIso);
     }
 
     return NextResponse.json({ ok: true, inserted: totalInserted });

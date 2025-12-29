@@ -11,6 +11,15 @@ import { supabase } from "@/lib/supabaseClient";
 const logo = "/duck-mascot.png";
 const takaraAvatar = "/takara-qode.jpg";
 
+function Feature({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex items-start gap-2">
+      <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+      <span className="text-sm">{children}</span>
+    </div>
+  );
+}
+
 const LandingPage = () => {
   const [email, setEmail] = useState("");
   const [niche, setNiche] = useState("");
@@ -40,8 +49,8 @@ const LandingPage = () => {
     document.getElementById("waitlist")?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const priceCore = process.env.NEXT_PUBLIC_STRIPE_PRICE_CORE;
-  const pricePro = process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO;
+  const priceEarly = process.env.NEXT_PUBLIC_STRIPE_PRICE_EARLY || process.env.NEXT_PUBLIC_STRIPE_PRICE_CORE;
+  const priceBuilder = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUILDER || process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO;
 
   const startCheckout = async (priceId?: string) => {
     if (!priceId) {
@@ -83,7 +92,7 @@ const LandingPage = () => {
               <img src={logo} alt="TrafficDuck" className="w-28 h-28" />
             </div>
             <h1 className="text-4xl md:text-5xl lg:text-7xl font-heading font-bold tracking-tight text-foreground leading-tight">
-              Your Conversation Radar.<br />
+              Your Conversation Radar.x
               <span className="text-primary">Find Customers.</span> Join Conversations.
             </h1>
             <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
@@ -140,7 +149,7 @@ const LandingPage = () => {
                 <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
                   <Target className="w-7 h-7 text-primary" />
                 </div>
-              <CardTitle className="text-2xl">1. Describe Your Niche</CardTitle>
+                <CardTitle className="text-2xl">1. Describe Your Niche</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <p className="text-muted-foreground leading-relaxed">
@@ -290,7 +299,7 @@ const LandingPage = () => {
               <CardHeader className="text-center pb-8">
                 <div className="mb-4">
                   <h3 className="text-2xl font-bold text-foreground mb-2">Free</h3>
-                  <p className="text-sm text-muted-foreground">Preview the Radar</p>
+                  <p className="text-sm text-muted-foreground">Try the signal</p>
                 </div>
                 <div className="mb-4">
                   <span className="text-5xl font-bold text-foreground">$0</span>
@@ -299,141 +308,100 @@ const LandingPage = () => {
                   Get Started
                 </Button>
               </CardHeader>
+
               <CardContent className="space-y-4">
-                <div className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                  <span className="text-sm">1 niche</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                  <span className="text-sm">1–2 conversations</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                  <span className="text-sm">Reddit only</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                  <span className="text-sm">One-time delivery</span>
-                </div>
+                <Feature>1 monitor</Feature>
+                <Feature>Manual scans only</Feature>
+                <Feature>Platforms: Reddit + Hacker News</Feature>
+                <Feature>1–2 posts total</Feature>
+                <Feature>No saved history</Feature>
+
                 <div className="pt-4 border-t">
                   <p className="text-xs text-muted-foreground">
-                    Preview the kind of conversations we surface.
+                    Prove there’s signal before automating.
                   </p>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Core Tier - Popular */}
+            {/* Early Tier */}
             <Card className="relative border-4 border-primary hover:shadow-2xl transition-all transform md:scale-105">
               <div className="absolute -top-4 left-1/2 -translate-x-1/2">
                 <Badge className="bg-primary text-primary-foreground px-6 py-1 text-sm font-semibold">
                   Most Popular
                 </Badge>
               </div>
+
               <CardHeader className="text-center pb-8 pt-8">
                 <div className="mb-4">
-                  <h3 className="text-2xl font-bold text-foreground mb-2">Core</h3>
-                  <p className="text-sm text-muted-foreground">Daily Radar</p>
+                  <h3 className="text-2xl font-bold text-foreground mb-2">Early</h3>
+                  <p className="text-sm text-muted-foreground">Daily signal</p>
                 </div>
                 <div className="mb-4">
-                  <span className="text-5xl font-bold text-foreground">$29</span>
+                  <span className="text-5xl font-bold text-foreground">$9</span>
                   <span className="text-muted-foreground">/month</span>
                 </div>
                 <Button
                   className="w-full bg-primary hover:bg-primary/90"
-                  onClick={() => startCheckout(priceCore)}
-                  disabled={loadingPrice === priceCore}
+                  onClick={() => startCheckout(priceEarly)}
+                  disabled={loadingPrice === priceEarly}
                 >
-                  {loadingPrice === priceCore ? "Redirecting..." : "Unlock Daily Radar"}
+                  {loadingPrice === priceEarly ? "Redirecting..." : "Start Daily Scans"}
                 </Button>
               </CardHeader>
+
               <CardContent className="space-y-4">
-                <div className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                  <span className="text-sm font-medium">1 niche</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                  <span className="text-sm font-medium">Daily automated scanning</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                  <span className="text-sm font-medium">Reddit</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                  <span className="text-sm font-medium">8–12 high-signal conversations/week</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                  <span className="text-sm font-medium">Why-it-matters analysis</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                  <span className="text-sm font-medium">Suggested engagement paths</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                  <span className="text-sm font-medium">Email delivery (dashboard optional)</span>
-                </div>
+                <Feature>1 monitor</Feature>
+                <Feature>Daily scans</Feature>
+                <Feature>Platforms: Reddit + Hacker News</Feature>
+                <Feature>2–3 posts per day</Feature>
+                <Feature>30-day saved history</Feature>
+
                 <div className="pt-4 border-t">
                   <p className="text-xs text-primary font-semibold">
-                    What 90% of users choose
+                    Best for early validation
                   </p>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Pro Tier */}
+            {/* Builder Tier */}
             <Card className="relative border-2 hover:shadow-lg transition-all">
               <CardHeader className="text-center pb-8">
                 <div className="mb-4">
-                  <h3 className="text-2xl font-bold text-foreground mb-2">Pro</h3>
-                  <p className="text-sm text-muted-foreground">Real-time Edge</p>
+                  <h3 className="text-2xl font-bold text-foreground mb-2">Builder</h3>
+                  <p className="text-sm text-muted-foreground">Full reach</p>
                 </div>
                 <div className="mb-4">
-                  <span className="text-5xl font-bold text-foreground">$59</span>
+                  <span className="text-5xl font-bold text-foreground">$19</span>
                   <span className="text-muted-foreground">/month</span>
                 </div>
                 <Button
                   variant="outline"
                   className="w-full"
-                  onClick={() => startCheckout(pricePro)}
-                  disabled={loadingPrice === pricePro}
+                  onClick={() => startCheckout(priceBuilder)}
+                  disabled={loadingPrice === priceBuilder}
                 >
-                  {loadingPrice === pricePro ? "Redirecting..." : "Unlock Daily Radar"}
+                  {loadingPrice === priceBuilder ? "Redirecting..." : "Unlock All Platforms"}
                 </Button>
               </CardHeader>
+
               <CardContent className="space-y-4">
-                <div className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                  <span className="text-sm font-medium">Everything in Core</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                  <span className="text-sm font-medium">Twitter / X included</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                  <span className="text-sm font-medium">Near real-time freshness</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                  <span className="text-sm font-medium">Priority scans</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                  <span className="text-sm font-medium">Early access to new channels</span>
-                </div>
+                <Feature>Up to 3 monitors</Feature>
+                <Feature>Daily scans</Feature>
+                <Feature>All platforms (X, Reddit, Hacker News)</Feature>
+                <Feature>5–7 posts per day</Feature>
+                <Feature>60–90 day saved history</Feature>
+
                 <div className="pt-4 border-t">
                   <p className="text-xs text-muted-foreground">
-                    For serious growth operators
+                    Built for serious builders and operators
                   </p>
                 </div>
               </CardContent>
             </Card>
           </div>
+
         </div>
       </section>
 

@@ -32,12 +32,12 @@ export function getPlanLimits(tier: SubscriptionTier): PlanLimits {
     case "early":
       return {
         maxKeywords: 1,
-        maxWeeklyResultsPerKeyword: 21,
+        maxWeeklyResultsPerKeyword: 10,
       };
     case "builder":
       return {
         maxKeywords: 3,
-        maxWeeklyResultsPerKeyword: "unlimited",
+        maxWeeklyResultsPerKeyword: 25,
         maxLifetimeResults: "unlimited",
       };
   }
@@ -61,10 +61,10 @@ export function getUpgradePlans(): UpgradePlan[] {
       priceLabel: "$9",
       period: "per month",
       features: [
-        "1 keyword",
+        "Up to 3 monitors",
         "Daily automated scan",
         "2–3 high-signal conversations per day",
-        "Reddit + Hacker News",
+        "Platforms: X / Twitter only",
         "Past 7 days",
         "Email digest",
         "Relevance-sorted (default)",
@@ -74,14 +74,15 @@ export function getUpgradePlans(): UpgradePlan[] {
       id: "builder",
       name: "Builder",
       priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_BUILDER || process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO,
-      priceLabel: "$29",
+      priceLabel: "$19",
       period: "per month",
       features: [
-        "Up to 3 keywords",
+        "Up to 3 monitors",
         "Daily or weekly scans",
-        "Reddit + HN + X",
+        "Platforms: All supported (X, Reddit, HackerNews, etc.)",
+        "5–7 posts per day",
         "Engagement + relevance sorting",
-        "30-day history",
+        "60–90-day history",
         "Multiple projects",
       ],
     },
