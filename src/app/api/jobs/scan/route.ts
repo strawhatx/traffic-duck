@@ -185,10 +185,10 @@ async function runPlatformJob(params: {
 }
 
 export async function POST(req: NextRequest) {
-//  const secret = req.headers.get("x-cron-secret");
-//  if (!process.env.CRON_SECRET || secret !== process.env.CRON_SECRET) {
-//    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-//  }
+  const secret = req.headers.get("x-cron-secret");
+  if (!process.env.CRON_SECRET || secret !== process.env.CRON_SECRET) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
   try {
     // Load active keywords for all users
