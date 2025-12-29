@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Check, Search, Zap, Target, TrendingUp, Users, MessageCircle, Radar } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabaseClient";
+import Link from "next/link";
 
 const logo = "/duck-mascot.png";
 const takaraAvatar = "/takara-qode.jpg";
@@ -92,8 +93,8 @@ const LandingPage = () => {
               <img src={logo} alt="TrafficDuck" className="w-28 h-28" />
             </div>
             <h1 className="text-4xl md:text-5xl lg:text-7xl font-heading font-bold tracking-tight text-foreground leading-tight">
-              Your Conversation Radar.x
-              <span className="text-primary">Find Customers.</span> Join Conversations.
+              Your Conversation Radar, {" "}
+              <span className="text-primary bg-black px-2 py-1 rounded-md">Find Customers</span> & Join Conversations.
             </h1>
             <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
               Stop hunting for leads. TrafficDuck scans Reddit, Instagram, and Twitter daily for conversations about your niche — then delivers them straight to you with engagement insights.
@@ -451,47 +452,13 @@ const LandingPage = () => {
               Start Finding Your Customers Today
             </h2>
             <p className="text-lg text-muted-foreground">
-              Join the waitlist and get your first radar scan free. No credit card required.
+              Join the and get your first radar scan free. No credit card required.
             </p>
           </div>
 
-          <form onSubmit={handleWaitlistSubmit} className="space-y-4">
-            <div className="space-y-3 text-left">
-              <label className="text-sm font-medium text-foreground">Your Email</label>
-              <Input
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="h-14 rounded-xl border-2 border-border bg-background text-base"
-                required
-              />
-            </div>
-            <div className="space-y-3 text-left">
-              <label className="text-sm font-medium text-foreground">
-                Your Niche <span className="text-muted-foreground">(optional)</span>
-              </label>
-              <Input
-                type="text"
-                placeholder="e.g., AI tools for indie devs; launch/pricing/growth problems"
-                value={niche}
-                onChange={(e) => setNiche(e.target.value)}
-                className="h-14 rounded-xl border-2 border-border bg-background text-base"
-              />
-            </div>
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full h-14 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-lg hover:shadow-xl transition-all text-base"
-            >
-              {isSubmitting ? "Joining..." : "Join the Waitlist"}
-            </Button>
-            <div className="bg-primary/10 border border-primary/30 rounded-xl p-4">
-              <p className="text-sm font-medium text-foreground">
-                Early sign-ups get FREE access until the official launch
-              </p>
-            </div>
-          </form>
+          <Link href="/sign-up">
+            <Button className="w-full bg-black text-white">Get Started Today</Button>
+          </Link>
         </div>
       </section>
 

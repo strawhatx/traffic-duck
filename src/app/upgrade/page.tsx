@@ -15,9 +15,11 @@ const plans = getUpgradePlans();
 export default function UpgradePage() {
   const [loadingId, setLoadingId] = useState<UpgradePlan["id"] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [manageLoading, setManageLoading] = useState(false);
   const router = useRouter();
   const [tier, setTier] = useState<SubscriptionTier>("free");
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -36,7 +38,10 @@ export default function UpgradePage() {
           .select("subscription_status, price_id")
           .eq("id", userId)
           .maybeSingle();
-        if (mounted) setTier(resolveTierFromProfile(profile ?? undefined));
+        if (mounted) {
+          setTier(resolveTierFromProfile(profile ?? undefined));
+          setSubscriptionStatus(profile?.subscription_status ?? null);
+        }
       }
     })();
     return () => {
@@ -78,13 +83,50 @@ export default function UpgradePage() {
     }
   };
 
+  const handleManageSubscription = async () => {
+    try {
+      setError(null);
+      setManageLoading(true);
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData?.user?.id;
+      if (!userId) {
+        setError("You must be signed in");
+        setManageLoading(false);
+        return;
+      }
+      const res = await fetch("/api/stripe/create-portal-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId }),
+      });
+      const payload = await res.json();
+      if (!res.ok || !payload?.url) {
+        setError(payload?.error ?? "Failed to open billing portal");
+        setManageLoading(false);
+        return;
+      }
+      window.location.href = payload.url as string;
+    } catch (e: any) {
+      setError(e?.message ?? "Error opening billing portal");
+      setManageLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-3xl mb-2">Upgrade</h1>
-            <p className="text-slate-600">Choose a plan that fits your needs.</p>
+            <h1 className="text-3xl mb-2">
+              {tier === "free" ? "Upgrade" : subscriptionStatus === "canceled" ? "Renew Your Plan" : "Manage Subscription"}
+            </h1>
+            <p className="text-slate-600">
+              {tier === "free" 
+                ? "Choose a plan that fits your needs." 
+                : subscriptionStatus === "canceled"
+                ? "Your subscription has been canceled. Reactivate it here."
+                : "View and manage your current subscription."}
+            </p>
           </div>
           <Button variant="outline" asChild>
             <Link href="/keywords">Back to Keywords</Link>
@@ -92,25 +134,29 @@ export default function UpgradePage() {
         </div>
 
         {/* Current Plan */}
-        <Card className="p-6 mb-8 border-2 border-blue-200 bg-blue-50">
+        <Card className={`p-6 mb-8 border-2 ${subscriptionStatus === "canceled" ? "border-yellow-200 bg-yellow-50" : "border-blue-200 bg-blue-50"}`}>
           <div className="flex items-start justify-between">
             <div>
               <div className="flex items-center gap-3 mb-2">
                 <h2 className="text-xl">Current Plan</h2>
                 <Badge
                   className={
-                    tier === "builder"
+                    subscriptionStatus === "canceled"
+                      ? "bg-yellow-600 text-white"
+                      : tier === "builder"
                       ? "bg-purple-600 text-white"
                       : tier === "early"
                       ? "bg-blue-600 text-white"
                       : "bg-slate-600 text-white"
                   }
                 >
-                  {tier.toUpperCase()}
+                  {subscriptionStatus === "canceled" ? "CANCELED" : tier.toUpperCase()}
                 </Badge>
               </div>
               <p className="text-slate-700 mb-4">
-                {tier === "builder"
+                {subscriptionStatus === "canceled"
+                  ? "Your subscription has expired. Renew to continue using premium features."
+                  : tier === "builder"
                   ? "All platforms + highest limits"
                   : tier === "early"
                   ? "Reddit + Hacker News with weekly caps"
@@ -120,14 +166,20 @@ export default function UpgradePage() {
                 <p className="text-sm text-slate-600">
                   <strong>Account:</strong> {userEmail ?? "—"}
                 </p>
+                {subscriptionStatus && subscriptionStatus !== "canceled" && (
+                  <p className="text-sm text-slate-600">
+                    <strong>Status:</strong> {subscriptionStatus.charAt(0).toUpperCase() + subscriptionStatus.slice(1)}
+                  </p>
+                )}
               </div>
             </div>
-            {tier !== "builder" && (
-              <Button asChild className="gap-2">
-                <Link href="/upgrade">
-                  <Crown className="w-4 h-4" />
-                  Upgrade Plan
-                </Link>
+            {(tier !== "free" || subscriptionStatus === "canceled") && (
+              <Button 
+                onClick={handleManageSubscription} 
+                disabled={manageLoading}
+                className="gap-2"
+              >
+                {manageLoading ? "Loading…" : subscriptionStatus === "canceled" ? "Renew Plan" : "Manage Subscription"}
               </Button>
             )}
           </div>
@@ -137,7 +189,10 @@ export default function UpgradePage() {
           <Card className="p-4 mb-6 border-red-300 bg-red-50 text-red-700">{error}</Card>
         ) : null}
 
-        <div className="grid md:grid-cols-2 gap-6">
+        {(tier === "free" || subscriptionStatus === "canceled") && (
+          <>
+            <h2 className="text-2xl mb-6">Available Plans</h2>
+            <div className="grid md:grid-cols-2 gap-6">
           {plans.map((plan) => {
             const isBuilder = plan.id === "builder";
             return (
@@ -182,7 +237,9 @@ export default function UpgradePage() {
               </Card>
             );
           })}
-        </div>
+            </div>
+          </>
+        )}
 
         {/* Platform Access Summary */}
         <Card className="p-6 mt-8">
