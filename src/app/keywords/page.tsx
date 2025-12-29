@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { useEffect, useState } from "react";
 import { Radar, Plus, Trash2, Edit2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -22,7 +23,7 @@ interface Keyword {
   createdAt: string;
 }
 
-export default function Keywords() {
+function KeywordsContent() {
   const { loading, userId } = useRequireAuth();
   const [keywords, setKeywords] = useState<Keyword[]>([]);
 
@@ -316,5 +317,24 @@ export default function Keywords() {
       </div>
       )}
     </div>
+  );
+}
+
+export default function Keywords() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-slate-50">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+            <Card className="p-12 text-center">
+              <Radar className="w-12 h-12 text-slate-300 mx-auto mb-4 animate-pulse" />
+              <h3 className="text-lg mb-2">Loading...</h3>
+            </Card>
+          </div>
+        </div>
+      }
+    >
+      <KeywordsContent />
+    </Suspense>
   );
 }
