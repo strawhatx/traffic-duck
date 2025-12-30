@@ -75,9 +75,11 @@ export default function NavBar() {
             <span className="text-2xl tracking-tight">TrafficDuck</span>
           </Link>
           <div className="flex items-center gap-4">
-            <Link href="/dashboard">
-              <Button variant="ghost">Dashboard</Button>
-            </Link>
+            {isAuthenticated ? (
+              <Link href="/dashboard">
+                <Button variant="ghost">Dashboard</Button>
+              </Link>
+            ) : null}
             <Link href="https://twitter.com/heynathanielj" target="_blank" rel="noopener noreferrer">
               <Button variant="ghost" size="icon">
                 <Twitter className="w-5 h-5" />
