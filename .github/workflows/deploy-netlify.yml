@@ -1,0 +1,57 @@
+name: Deploy to Netlify
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    environment: Production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint --if-present
+
+      # Build on Netlify so server functions (Prisma) are bundled correctly
+
+      - name: Install Netlify CLI
+        run: npm i -g netlify-cli
+
+      - name: Netlify Build & Deploy
+        run: netlify deploy --prod
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+          NEXT_TELEMETRY_DISABLED: 1
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+          CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
+          NEXT_PUBLIC_GIPHY_API_KEY: ${{ secrets.NEXT_PUBLIC_GIPHY_API_KEY }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          SITE_URL: ${{ secrets.SITE_URL }}
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          GEMINI_KEY: ${{ secrets.GEMINI_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          AWS_REGION: ${{ secrets.NEXT_AWS_REGION }}
+          AWS_S3_BUCKET: ${{ secrets.NEXT_AWS_S3_BUCKET }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.NEXT_AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.NEXT_AWS_SECRET_ACCESS_KEY }}
+          STRIPE_PRICE_ID_LAUNCH: ${{ secrets.STRIPE_PRICE_ID_LAUNCH }}
+          STRIPE_PRICE_ID_GROW: ${{ secrets.STRIPE_PRICE_ID_GROW }}
+          ADMIN_USER_IDS: ${{ secrets.ADMIN_USER_IDS }}
+
+
