@@ -31,8 +31,10 @@ export async function callGrok(
       }),
     });
     if (!res.ok) return "";
-    const data: any = await res.json();
-    return stripFences(data?.choices?.[0]?.message?.content || "");
+    const data = await res.json() as Record<string, unknown>;
+    const choices = Array.isArray(data?.choices) ? data.choices : [];
+    const message = (choices[0] as Record<string, unknown>)?.message as Record<string, unknown> | undefined;
+    return stripFences((message?.content as string | undefined) || "");
   } catch {
     return "";
   }
@@ -59,8 +61,10 @@ export async function callOpenAI(
       }),
     });
     if (!res.ok) return "";
-    const data: any = await res.json();
-    return stripFences(data?.choices?.[0]?.message?.content || "");
+    const data = await res.json() as Record<string, unknown>;
+    const choices = Array.isArray(data?.choices) ? data.choices : [];
+    const message = (choices[0] as Record<string, unknown>)?.message as Record<string, unknown> | undefined;
+    return stripFences((message?.content as string | undefined) || "");
   } catch {
     return "";
   }
@@ -93,8 +97,11 @@ export async function callGemini(
       },
     );
     if (!res.ok) return "";
-    const rj: any = await res.json();
-    const text = rj?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    const rj = await res.json() as Record<string, unknown>;
+    const candidates = Array.isArray(rj?.candidates) ? rj.candidates : [];
+    const content = (candidates[0] as Record<string, unknown>)?.content as Record<string, unknown> | undefined;
+    const parts = Array.isArray(content?.parts) ? content.parts : [];
+    const text = ((parts[0] as Record<string, unknown>)?.text as string | undefined) || "";
     return stripFences(text);
   } catch {
     return "";

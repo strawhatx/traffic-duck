@@ -34,15 +34,17 @@ export function shouldDrop(text: string): boolean {
 
 // Secondary bonuses for AI-first pipeline
 export function recencyBonusFromEngagement(e: unknown): number {
+  const engagementObj = e as Record<string, unknown> | undefined;
   const createdAt =
-    typeof (e as any)?.created_at === "string" ? ((e as any).created_at as string) : undefined;
+    typeof engagementObj?.created_at === "string" ? (engagementObj.created_at as string) : undefined;
   return isRecentIso(createdAt) ? 2 : 0;
 }
 
 export function engagementBonusFromEngagement(e: unknown): number {
+  const engagementObj = e as Record<string, unknown> | undefined;
   const karma = Number(
-    (e as any)?.upvotes ??
-      (e as any)?.likes ??
+    engagementObj?.upvotes ??
+      engagementObj?.likes ??
       0,
   );
   return karma >= 50 ? 1 : 0;

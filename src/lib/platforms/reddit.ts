@@ -14,9 +14,10 @@ export async function searchReddit(query: string, limit: number = 25): Promise<P
   try {
     const res = await fetch(url, { headers: { "User-Agent": "TrafficDuckBot/1.0" } });
     if (!res.ok) return [];
-    const data = await res.json();
-    const children = data?.data?.children ?? [];
-    return children.map((c: any): PlatformResult => {
+    const data = await res.json() as Record<string, unknown>;
+    const dataObj = data?.data as Record<string, unknown> | undefined;
+    const children = Array.isArray(dataObj?.children) ? dataObj.children : [];
+    return children.map((c: Record<string, unknown>): PlatformResult => {
       const d = c?.data ?? {};
       const createdUtc = typeof d.created_utc === "number" ? d.created_utc : undefined;
       const createdIso = createdUtc ? new Date(createdUtc * 1000).toISOString() : undefined;

@@ -255,8 +255,9 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ ok: true, inserted: totalInserted });
-  } catch (err: any) {
-    return NextResponse.json({ error: err?.message ?? "Job failed" }, { status: 500 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Job failed";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 

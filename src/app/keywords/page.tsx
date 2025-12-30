@@ -101,7 +101,7 @@ function KeywordsContent() {
     return () => {
       cancelled = true;
     };
-  }, [loading, userId]);
+  }, [userId, mapRowToKeyword, loading]);
 
   const handleDelete = (id: string) => {
     void (async () => {
@@ -144,9 +144,10 @@ function KeywordsContent() {
 
   const handleSubmitDraft = (draft: DialogKeywordDraft) => {
     // Enforce platform availability by tier
+    const platformsObj = draft.platforms as Record<string, unknown>;
     const safePlatforms = {
       reddit: draft.platforms.reddit,
-      hackernews: tier !== "free" ? (draft.platforms as any).hackernews === true : false,
+      hackernews: tier !== "free" ? platformsObj.hackernews === true : false,
       twitter: tier === "builder" ? draft.platforms.twitter : false,
     } as Keyword["platforms"];
     const platformArr = platformsToArray(safePlatforms);
@@ -306,8 +307,8 @@ function KeywordsContent() {
             <Card className="p-6 bg-blue-50 border-blue-200">
               <h3 className="text-lg mb-2">💡 Tips for better keyword tracking</h3>
               <ul className="space-y-2 text-sm text-slate-700">
-                <li>• Use specific phrases like "project management for startups" instead of just "project management"</li>
-                <li>• Include common variations and abbreviations (e.g., "CRM" and "customer relationship management")</li>
+                <li>• Use specific phrases like &quot;project management for startups&quot; instead of just &quot;project management&quot;</li>
+                <li>• Include common variations and abbreviations (e.g., &quot;CRM&quot; and &quot;customer relationship management&quot;)</li>
                 <li>• Monitor competitor names and product categories relevant to your niche</li>
                 <li>• Keep keywords focused - quality over quantity leads to better results</li>
               </ul>
