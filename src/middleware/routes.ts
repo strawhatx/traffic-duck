@@ -34,6 +34,18 @@ export async function middleware(req: NextRequest) {
   const { pathname, search } = req.nextUrl;
   const isPublic = isPublicRoute(pathname);
 
+  // Minimal production debug logging to help diagnose auth redirects in prod
+  if (process.env.NODE_ENV === "production") {
+    try {
+      // Avoid logging secret/session payloads; only log presence
+      // Visible in Netlify function logs
+      // eslint-disable-next-line no-console
+      console.log("[middleware]", { pathname, isPublic, hasSession: !!session });
+    } catch (e) {
+      // ignore
+    }
+  }
+
   if (!isPublic && !session) {
     const redirectUrl = new URL("/sign-in", req.url);
     if (pathname) {
