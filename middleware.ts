@@ -16,7 +16,6 @@
 
 export async function middleware(req: NextRequest) {
    // Basic debug to confirm middleware runs
-   // eslint-disable-next-line no-console
    console.log('[middleware] path=', req.nextUrl.pathname)
  
    const res = NextResponse.next()
@@ -59,7 +58,7 @@ export async function middleware(req: NextRequest) {
          return NextResponse.redirect(new URL('/pricing', req.url))
        }
      }
-   } catch (e) {
+   } catch {
      // ignore subscription errors in middleware to avoid locking users out
    }
 

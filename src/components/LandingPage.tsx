@@ -1,7 +1,6 @@
 "use client";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Check, Search, Zap, Target, TrendingUp, Users, MessageCircle, Radar } from "lucide-react";
@@ -22,25 +21,7 @@ function Feature({ children }: { children: React.ReactNode }) {
 }
 
 const LandingPage = () => {
-  const [email, setEmail] = useState("");
-  const [niche, setNiche] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadingPrice, setLoadingPrice] = useState<string | null>(null);
-
-  const handleWaitlistSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email.trim()) {
-      toast.error("Please enter your email.");
-      return;
-    }
-    setIsSubmitting(true);
-    setTimeout(() => {
-      toast.success("You're on the list! We'll be in touch soon.");
-      setEmail("");
-      setNiche("");
-      setIsSubmitting(false);
-    }, 1000);
-  };
 
   const scrollToPricing = () => {
     document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth" });
@@ -75,8 +56,9 @@ const LandingPage = () => {
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Failed to start checkout");
       window.location.href = json.url;
-    } catch (e: any) {
-      toast.error(e.message || "Unable to start checkout");
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : "Unable to start checkout";
+      toast.error(message);
     } finally {
       setLoadingPrice(null);
     }
@@ -158,10 +140,10 @@ const LandingPage = () => {
                 </p>
                 <div className="pt-2 space-y-2">
                   <div className="text-sm font-mono bg-muted/50 px-3 py-2 rounded-lg">
-                    "freelance designers"
+                    &quot;freelance designers&quot;
                   </div>
                   <div className="text-sm font-mono bg-muted/50 px-3 py-2 rounded-lg">
-                    "AI tools for writers"
+                    &quot;AI tools for writers&quot;
                   </div>
                 </div>
               </CardContent>
@@ -287,7 +269,7 @@ const LandingPage = () => {
               Simple, Transparent Pricing
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Start free, upgrade when you're ready to scale
+              Start free, upgrade when you&apos;re ready to scale
             </p>
           </div>
           <p className="text-sm text-center text-muted-foreground mb-10">
@@ -413,12 +395,12 @@ const LandingPage = () => {
             <CardContent className="p-8 md:p-12 text-center space-y-6">
               <div className="flex justify-center">
                 <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <span className="text-3xl text-primary font-serif">"</span>
+                  <span className="text-3xl text-primary font-serif">&quot;</span>
                 </div>
               </div>
               <blockquote className="text-xl md:text-2xl lg:text-3xl font-heading tracking-tight text-foreground leading-relaxed">
-                "The tweets you linked are on point — if your tool can perfectly find enough of these daily{" "}
-                <span className="text-primary font-semibold">I would gladly pay.</span>"
+                &quot;The tweets you linked are on point — if your tool can perfectly find enough of these daily{" "}
+                <span className="text-primary font-semibold">I would gladly pay.</span>&quot;
               </blockquote>
               <div className="flex items-center justify-center gap-3 pt-4">
                 <img

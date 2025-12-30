@@ -32,18 +32,19 @@ export async function searchTwitter(query: string, limit: number = 10): Promise<
         },
       });
       if (!res.ok) continue;
-      const data: any = await res.json();
+      const data = await res.json() as Record<string, unknown>;
       const tweets = Array.isArray(data?.data) ? data.data : [];
-      const users = Array.isArray(data?.includes?.users) ? data.includes.users : [];
-      const userById = new Map<string, any>(users.map((u: any) => [u.id, u]));
+      const includes = data?.includes as Record<string, unknown> | undefined;
+      const users = Array.isArray(includes?.users) ? includes.users : [];
+      const userById = new Map<string, Record<string, unknown>>(users.map((u: Record<string, unknown>) => [u.id as string, u]));
 
-      const results: PlatformResult[] = tweets.map((t: any) => {
-        const user = userById.get(t.author_id);
-        const username = user?.username || "unknown";
-        const name = user?.name || username;
+      const results: PlatformResult[] = tweets.map((t: Record<string, unknown>) => {
+        const user = userById.get(t.author_id as string);
+        const username = (user?.username as string) || "unknown";
+        const name = (user?.name as string) || username;
         const text: string = String(t?.text || "");
         const title = text.length > 80 ? `${text.slice(0, 77)}...` : text;
-        const metrics = t?.public_metrics || {};
+        const metrics = (t?.public_metrics as Record<string, unknown>) || {};
         return {
           platform: "twitter",
           title,

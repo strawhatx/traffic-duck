@@ -52,7 +52,7 @@ export default function Dashboard() {
         setError("Failed to load results");
         setResults([]);
       } else {
-        setResults((data as any as SearchResult[]) ?? []);
+        setResults((data ?? []) as SearchResult[]);
       }
       setLoading(false);
     };
@@ -73,11 +73,12 @@ export default function Dashboard() {
   }, [results, platformFilter, search]);
 
   const weekStats = useMemo(() => {
+    // eslint-disable-next-line react-hooks/purity
     const now = Date.now();
-    const weekAgo = now - 7 * 24 * 60 * 60 * 1000;
     let thisWeek = 0;
     let reddit = 0;
     let twitter = 0;
+    const weekAgo = now - 7 * 24 * 60 * 60 * 1000;
     for (const r of results) {
       if (r.platform === "reddit") reddit += 1;
       if (r.platform === "twitter") twitter += 1;
@@ -196,14 +197,15 @@ export default function Dashboard() {
           {filteredResults.map((conversation) => {
             const isReddit = conversation.platform === "reddit";
             const engagement = conversation.engagement ?? {};
+            const engagementObj = engagement as Record<string, unknown>;
             const upvotes = Number(
-              typeof (engagement as any).upvotes === "number" ? (engagement as any).upvotes : 0,
+              typeof engagementObj.upvotes === "number" ? engagementObj.upvotes : 0,
             );
             const likes = Number(
-              typeof (engagement as any).likes === "number" ? (engagement as any).likes : 0,
+              typeof engagementObj.likes === "number" ? engagementObj.likes : 0,
             );
             const comments = Number(
-              typeof (engagement as any).comments === "number" ? (engagement as any).comments : 0,
+              typeof engagementObj.comments === "number" ? engagementObj.comments : 0,
             );
             return (
               <Card key={conversation.id} className="p-6 hover:shadow-md transition-shadow">

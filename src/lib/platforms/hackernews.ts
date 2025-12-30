@@ -21,10 +21,10 @@ export async function searchHackerNews(
     const res = await fetch(url.toString());
     if (!res.ok) return [];
 
-    const data: any = await res.json();
+    const data = await res.json() as Record<string, unknown>;
     const hits = Array.isArray(data?.hits) ? data.hits : [];
 
-    return hits.slice(0, limit).map((h: any): PlatformResult => ({
+    return hits.slice(0, limit).map((h: Record<string, unknown>): PlatformResult => ({
       platform: "hackernews",
       title: h?.title || "Hacker News story",
       content: h?.title || "",

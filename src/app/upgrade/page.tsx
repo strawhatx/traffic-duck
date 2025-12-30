@@ -16,10 +16,17 @@ export default function UpgradePage() {
   const [loadingId, setLoadingId] = useState<UpgradePlan["id"] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [manageLoading, setManageLoading] = useState(false);
+  const [redirectUrl, setRedirectUrl] = useState<string | null>(null);
   const router = useRouter();
   const [tier, setTier] = useState<SubscriptionTier>("free");
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (redirectUrl) {
+      window.location.href = redirectUrl;
+    }
+  }, [redirectUrl]);
 
   useEffect(() => {
     let mounted = true;
@@ -76,9 +83,10 @@ export default function UpgradePage() {
         setLoadingId(null);
         return;
       }
-      window.location.href = payload.url as string;
-    } catch (e: any) {
-      setError(e?.message ?? "Error starting checkout");
+      setRedirectUrl(payload.url);
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : "Error starting checkout";
+      setError(message);
       setLoadingId(null);
     }
   };
@@ -106,8 +114,9 @@ export default function UpgradePage() {
         return;
       }
       window.location.href = payload.url as string;
-    } catch (e: any) {
-      setError(e?.message ?? "Error opening billing portal");
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : "Error opening billing portal";
+      setError(message);
       setManageLoading(false);
     }
   };
