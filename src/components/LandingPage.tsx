@@ -1,744 +1,436 @@
-import { useRef, useState } from "react";
+"use client";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Progress } from "@/components/ui/progress";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Slider } from "@/components/ui/slider";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Check, Search, Zap, Target, TrendingUp, Users, MessageCircle, Radar } from "lucide-react";
 import { toast } from "sonner";
-import logo from "@/assets/duck-mascot.png";
-import takaraAvatar from "@/assets/takara-qode.jpg";
+import { supabase } from "@/lib/supabaseClient";
+import Link from "next/link";
 
-type UserGoal = "traffic" | "growth" | "expertise";
+const logo = "/duck-mascot.png";
+const takaraAvatar = "/takara-qode.jpg";
 
-type Metrics = {
-  comments?: number;
-  likes?: number;
-  upvotes?: number;
-};
-
-type RedditItem = {
-  title: string;
-  subreddit: string;
-  relevance: string;
-  preview: string;
-  link: string;
-  metrics: Metrics;
-};
-
-type TwitterItem = {
-  creator: string;
-  summary: string;
-  relevance: string;
-  title: string;
-  preview: string;
-  link: string;
-  metrics: Metrics;
-};
-
-type LinkedInItem = {
-  author: string;
-  subject: string;
-  angle: string;
-  preview: string;
-  link: string;
-  metrics: Metrics;
-};
-
-type DistributionMap = {
-  reddit: RedditItem[];
-  twitter: TwitterItem[];
-  linkedin: LinkedInItem[];
-};
+function Feature({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex items-start gap-2">
+      <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+      <span className="text-sm">{children}</span>
+    </div>
+  );
+}
 
 const LandingPage = () => {
+  const [email, setEmail] = useState("");
   const [niche, setNiche] = useState("");
-  const [audience, setAudience] = useState("");
-  const [goal, setGoal] = useState<UserGoal>("traffic");
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [map, setMap] = useState<DistributionMap | null>(null);
-  const [step, setStep] = useState<number>(1);
-  const formRef = useRef<HTMLDivElement | null>(null);
-  const resultsRef = useRef<HTMLDivElement | null>(null);
-  const [replyDraftByKey, setReplyDraftByKey] = useState<Record<string, string>>({});
-  const [enhanceInputByKey, setEnhanceInputByKey] = useState<Record<string, string>>({});
-  const [enhanceResultByKey, setEnhanceResultByKey] = useState<Record<string, string>>({});
-  const [openGenerateKey, setOpenGenerateKey] = useState<string | null>(null);
-  const [openEnhanceKey, setOpenEnhanceKey] = useState<string | null>(null);
-  const [intentEmail, setIntentEmail] = useState("");
-  const [intentUrl, setIntentUrl] = useState("");
-  const [intentPlatforms, setIntentPlatforms] = useState<string[]>([]);
-  const [isSubmittingIntent, setIsSubmittingIntent] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loadingPrice, setLoadingPrice] = useState<string | null>(null);
 
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const scrollToForm = () => {
-    formRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  const generateDistributionMap = (topic: string, target: string): DistributionMap => {
-    const topicCap = topic.trim() || "your niche";
-    const targetCap = target.trim() || "your audience";
-    const nowHint = "this week";
-
-    const reddit: RedditItem[] = [
-      {
-        title: `Best practices for ${topicCap} that actually moved the needle`,
-        subreddit: `r/${topicCap.replace(/\s+/g, '')}Growth`,
-        relevance: `Members are sharing what's working ${nowHint} for ${targetCap}.`,
-        preview: `We tested three ${topicCap} tactics across two cohorts. Here’s what actually improved outcomes for ${targetCap}...`,
-        link: `https://www.reddit.com/${topicCap.replace(/\s+/g, '').toLowerCase()}growth/comments/abc123`,
-        metrics: { upvotes: 184, comments: 37 }
-      },
-      {
-        title: `Help me improve my ${topicCap} strategy for ${targetCap}`,
-        subreddit: `r/${topicCap.replace(/\s+/g, '')}Advice`,
-        relevance: `High comment velocity; perfect for adding your perspective.`,
-        preview: `Current plan focuses on two channels; results are flat. Looking for feedback from folks targeting ${targetCap}...`,
-        link: `https://www.reddit.com/${topicCap.replace(/\s+/g, '').toLowerCase()}advice/comments/def456`,
-        metrics: { upvotes: 96, comments: 52 }
-      },
-      {
-        title: `${topicCap} tools roundup ${nowHint}`,
-        subreddit: `r/${topicCap.replace(/\s+/g, '')}Tools`,
-        relevance: `Tool comparisons are trending; you can contribute pros/cons.`,
-        preview: `Roundup of tools helping ${targetCap} implement ${topicCap}. Pros/cons from hands-on trials...`,
-        link: `https://www.reddit.com/${topicCap.replace(/\s+/g, '').toLowerCase()}tools/comments/ghi789`,
-        metrics: { upvotes: 142, comments: 28 }
-      },
-      {
-        title: `Case study: How we reached ${targetCap} using ${topicCap}`,
-        subreddit: `r/CaseStudies`,
-        relevance: `Case studies pull strong engagement and invite thoughtful discussion.`,
-        preview: `From zero to traction: our ${topicCap} rollout plan with hard numbers and what we’d change...`,
-        link: `https://www.reddit.com/r/casestudies/comments/jkl012`,
-        metrics: { upvotes: 211, comments: 44 }
-      },
-      {
-        title: `What did you try this week in ${topicCap}?`,
-        subreddit: `r/WeeklyWins`,
-        relevance: `Weekly open thread — easy entry to join relevant conversations.`,
-        preview: `Drop your quick wins and fails in ${topicCap}. What moved the needle for ${targetCap}?`,
-        link: `https://www.reddit.com/r/weeklywins/comments/mno345`,
-        metrics: { upvotes: 73, comments: 63 }
-      }
-    ];
-
-    const twitter: TwitterItem[] = [
-      {
-        creator: `@${topicCap.replace(/\s+/g, '')}Insider`,
-        summary: `Thread on actionable ${topicCap} tactics that resonate with ${targetCap}.`,
-        relevance: `Reply with a concrete example or mini case study.`,
-        title: `Actionable ${topicCap} tactics`,
-        preview: `“We shipped 3 micro-experiments in ${topicCap}. Here’s the one that stuck with ${targetCap}...”`,
-        link: `https://twitter.com/${topicCap.replace(/\s+/g, '')}Insider/status/1234567890`,
-        metrics: { likes: 320, comments: 41 }
-      },
-      {
-        creator: `@buildinpublic_${topicCap.replace(/\s+/g, '').toLowerCase()}`,
-        summary: `Sharing behind-the-scenes metrics after testing ${topicCap} frameworks.`,
-        relevance: `Add a metric or lesson learned to spark follow-up questions.`,
-        title: `Behind-the-scenes metrics`,
-        preview: `“Tried 2 frameworks for ${topicCap}. One got 3x CTR from ${targetCap}. Why we think it worked...”`,
-        link: `https://twitter.com/buildinpublic_${topicCap.replace(/\s+/g, '').toLowerCase()}/status/2345678901`,
-        metrics: { likes: 188, comments: 27 }
-      },
-      {
-        creator: `@${topicCap.split(" ")[0] || "pro"}_daily`,
-        summary: `Short list of common mistakes ${targetCap} make with ${topicCap}.`,
-        relevance: `Offer a corrective checklist; people love saveable replies.`,
-        title: `Mistakes ${targetCap} make`,
-        preview: `“Top 5 ${topicCap} mistakes we keep seeing from ${targetCap} — and how to fix them...”`,
-        link: `https://twitter.com/${(topicCap.split(" ")[0] || "pro")}_daily/status/3456789012`,
-        metrics: { likes: 254, comments: 33 }
-      },
-      {
-        creator: `@${targetCap.replace(/\s+/g, '')}Hub`,
-        summary: `Curated links about ${topicCap} trends ${nowHint}.`,
-        relevance: `Point to an under-discussed angle and ask for takes.`,
-        title: `${topicCap} trends ${nowHint}`,
-        preview: `“Handpicked ${topicCap} reads for ${targetCap}. The under-discussed angle: lifecycle timing...”`,
-        link: `https://twitter.com/${targetCap.replace(/\s+/g, '')}Hub/status/4567890123`,
-        metrics: { likes: 147, comments: 18 }
-      },
-      {
-        creator: `@ops_${topicCap.replace(/\s+/g, '').toLowerCase()}`,
-        summary: `Ops view: implementation pitfalls when rolling out ${topicCap}.`,
-        relevance: `Suggest a playbook step or a pre-mortem question.`,
-        title: `Implementation pitfalls`,
-        preview: `“Rolling out ${topicCap}? These 3 ops pitfalls cost us time with ${targetCap}...”`,
-        link: `https://twitter.com/ops_${topicCap.replace(/\s+/g, '').toLowerCase()}/status/5678901234`,
-        metrics: { likes: 101, comments: 15 }
-      }
-    ];
-
-    const linkedin: LinkedInItem[] = [
-      {
-        author: `${topicCap} Practitioner`,
-        subject: `A practical framework for ${topicCap} targeting ${targetCap}`,
-        angle: `Share a 3-step checklist and invite others to add steps.`,
-        preview: `We’ve been iterating a simple ${topicCap} framework for ${targetCap}. Here’s the 3-step version...`,
-        link: `https://www.linkedin.com/feed/update/urn:li:activity:111222333`,
-        metrics: { likes: 289, comments: 22 }
-      },
-      {
-        author: `Head of ${topicCap} @ GrowthCo`,
-        subject: `What changed for us after focusing on ${targetCap}`,
-        angle: `Comment with a counterintuitive lesson or a small win.`,
-        preview: `Switching to ${targetCap}-first changed our roadmap. Biggest surprise and the metric that moved...`,
-        link: `https://www.linkedin.com/feed/update/urn:li:activity:222333444`,
-        metrics: { likes: 173, comments: 19 }
-      },
-      {
-        author: `${targetCap} Community Manager`,
-        subject: `Top challenges ${targetCap} face with ${topicCap}`,
-        angle: `Add a quick fix and ask if others have tried it.`,
-        preview: `The three friction points we keep hearing from ${targetCap} around ${topicCap}...`,
-        link: `https://www.linkedin.com/feed/update/urn:li:activity:333444555`,
-        metrics: { likes: 142, comments: 24 }
-      },
-      {
-        author: `Founder working on ${topicCap}`,
-        subject: `How we validated a ${topicCap} idea with ${targetCap}`,
-        angle: `Offer a leaner validation step or alternate channel.`,
-        preview: `Validation notes from building in public: what resonated with ${targetCap} and what fell flat...`,
-        link: `https://www.linkedin.com/feed/update/urn:li:activity:444555666`,
-        metrics: { likes: 118, comments: 14 }
-      },
-      {
-        author: `Analyst covering ${topicCap}`,
-        subject: `Trends report: ${topicCap} adoption and what's next`,
-        angle: `Pull out a stat and connect it to a practical action.`,
-        preview: `Latest data on ${topicCap} adoption. One chart ${targetCap} should care about and why...`,
-        link: `https://www.linkedin.com/feed/update/urn:li:activity:555666777`,
-        metrics: { likes: 205, comments: 17 }
-      }
-    ];
-
-    return { reddit, twitter, linkedin };
-  };
-
-  const handleGenerate = async (e: React.FormEvent) => {
+  const handleWaitlistSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!niche.trim() || !audience.trim() || !goal) {
-      toast.error("Please fill in both fields.");
-      return;
-    }
-    setIsGenerating(true);
-    setTimeout(() => {
-      const result = generateDistributionMap(niche, audience);
-      setMap(result);
-      setIsGenerating(false);
-      toast.success("Your Distribution Map is ready!");
-      resultsRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, 900);
-  };
-
-  const improveReply = (text: string, topic: string, target: string) => {
-    const trimmed = text.trim();
-    if (!trimmed) return "";
-    const opener = `For ${target || "your audience"} interested in ${topic || "this topic"}, here's a sharper take:`;
-    const improved = [
-      opener,
-      "",
-      trimmed
-        .replace(/\s+/g, " ")
-        .replace(/^i\s/g, "I ")
-        .replace(/\.?$/, "."),
-      "",
-      "Quick upgrades:",
-      "• Lead with 1 tangible outcome",
-      "• Add 1 number or example",
-      "• End with a specific question to invite replies"
-    ].join("\n");
-    return improved;
-  };
-
-  const itemKey = (platform: "reddit" | "twitter" | "linkedin", idx: number) =>
-    `${platform}-${idx}`;
-
-  const generateReplyDraft = (
-    platform: "reddit" | "twitter" | "linkedin",
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    item: any,
-    userGoal: UserGoal
-  ): string => {
-    const context =
-      platform === "reddit"
-        ? `${item.title} — ${item.preview} (${item.subreddit})`
-        : platform === "twitter"
-          ? `${item.title} by ${item.creator} — ${item.preview}`
-          : `${item.subject} by ${item.author} — ${item.preview}`;
-    const goalLine =
-      userGoal === "traffic"
-        ? "I'll add a clear outcome and CTA to drive clicks."
-        : userGoal === "growth"
-          ? "I'll focus on curiosity and reply-magnet phrasing to spark a thread."
-          : "I'll tighten authority signals and make it concise, confident, and helpful.";
-    return [
-      `Jumping in on this conversation about ${niche} for ${audience}.`,
-      "",
-      `Context: ${context}`,
-      "",
-      "Draft reply:",
-      `• Quick insight: a specific tactic that works for ${audience} in ${niche}.`,
-      "• 1 number/example to anchor credibility.",
-      "• Invite discussion with a focused question.",
-      "",
-      goalLine
-    ].join("\n");
-  };
-
-  const handleGenerateReply = (
-    platform: "reddit" | "twitter" | "linkedin",
-    idx: number
-  ) => {
-    if (!map) return;
-    const key = itemKey(platform, idx);
-    const item =
-      platform === "reddit"
-        ? map.reddit[idx]
-        : platform === "twitter"
-          ? map.twitter[idx]
-          : map.linkedin[idx];
-    const draft = generateReplyDraft(platform, item, goal);
-    setReplyDraftByKey((prev) => ({ ...prev, [key]: draft }));
-    setOpenGenerateKey(key);
-    toast.success("Draft reply generated.");
-  };
-
-  const handleEnhanceForItem = (
-    platform: "reddit" | "twitter" | "linkedin",
-    idx: number
-  ) => {
-    const key = itemKey(platform, idx);
-    const text = enhanceInputByKey[key] || "";
-    const result = improveReply(text, niche, audience);
-    if (!result) {
-      toast.error("Paste a reply to enhance.");
-      return;
-    }
-    setEnhanceResultByKey((prev) => ({ ...prev, [key]: result }));
-    toast.success("Enhanced reply ready.");
-  };
-
-  const totalSteps = 3;
-  const progressValue = Math.round((step / totalSteps) * 100);
-
-  const handleWizardSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (step === 1) {
-      if (!niche.trim()) {
-        toast.error("Please enter what you talk about.");
-        return;
-      }
-      setStep(2);
-      return;
-    }
-    if (step === 2) {
-      if (!audience.trim()) {
-        toast.error("Please enter your audience.");
-        return;
-      }
-      setStep(3);
-      return;
-    }
-    if (step === 3) {
-      void handleGenerate(e);
-    }
-  };
-
-  const encode = (data: Record<string, string>) =>
-    Object.keys(data)
-      .map((key) => encodeURIComponent(key) + "=" + encodeURIComponent(data[key]))
-      .join("&");
-
-  const handleIntentSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!intentUrl.trim()) {
-      toast.error("Please paste your content URL.");
-      return;
-    }
-    if (!intentEmail.trim()) {
+    if (!email.trim()) {
       toast.error("Please enter your email.");
       return;
     }
-    setIsSubmittingIntent(true);
+    setIsSubmitting(true);
+    setTimeout(() => {
+      toast.success("You're on the list! We'll be in touch soon.");
+      setEmail("");
+      setNiche("");
+      setIsSubmitting(false);
+    }, 1000);
+  };
+
+  const scrollToPricing = () => {
+    document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const scrollToWaitlist = () => {
+    document.getElementById("waitlist")?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const priceEarly = process.env.NEXT_PUBLIC_STRIPE_PRICE_EARLY || process.env.NEXT_PUBLIC_STRIPE_PRICE_CORE;
+  const priceBuilder = process.env.NEXT_PUBLIC_STRIPE_PRICE_BUILDER || process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO;
+
+  const startCheckout = async (priceId?: string) => {
+    if (!priceId) {
+      toast.error("Pricing not configured yet.");
+      return;
+    }
+    setLoadingPrice(priceId);
+    const { data: userData } = await supabase.auth.getUser();
+    const userId = userData?.user?.id;
+    if (!userId) {
+      setLoadingPrice(null);
+      window.location.href = "/sign-in";
+      return;
+    }
     try {
-      const payload = {
-        "form-name": "waitlist-intent",
-        email: intentEmail.trim(),
-        url: intentUrl.trim(),
-        platforms: intentPlatforms.join(",")
-      };
-      const res = await fetch("/", {
+      const res = await fetch("/api/stripe/create-checkout-session", {
         method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: encode(payload)
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ priceId, userId }),
       });
-      if (!res.ok) throw new Error("Submit failed");
-      toast.success("You're on the waitlist — thanks!");
-      setIntentEmail("");
-      setIntentUrl("");
-      setIntentPlatforms([]);
-    } catch {
-      toast.error("Could not submit right now. Please try again.");
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Failed to start checkout");
+      window.location.href = json.url;
+    } catch (e: any) {
+      toast.error(e.message || "Unable to start checkout");
     } finally {
-      setIsSubmittingIntent(false);
+      setLoadingPrice(null);
     }
   };
 
-  const parseKey = (key: string | null): { platform: "reddit" | "twitter" | "linkedin"; idx: number } | null => {
-    if (!key) return null;
-    const [platform, idxStr] = key.split("-");
-    const idx = Number(idxStr);
-    if (platform !== "reddit" && platform !== "twitter" && platform !== "linkedin") return null;
-    if (Number.isNaN(idx)) return null;
-    return { platform, idx };
-  };
-
-  const getItemForKey = (
-    key: string | null
-  ):
-    | { platform: "reddit" | "twitter" | "linkedin"; idx: number; item: unknown; title: string }
-    | null => {
-    const parsed = parseKey(key);
-    if (!parsed || !map) return null;
-    const { platform, idx } = parsed;
-    if (platform === "reddit") {
-      const item = map.reddit[idx];
-      if (!item) return null;
-      return { platform, idx, item, title: item.title };
-    }
-    if (platform === "twitter") {
-      const item = map.twitter[idx];
-      if (!item) return null;
-      return { platform, idx, item, title: item.title };
-    }
-    const item = map.linkedin[idx];
-    if (!item) return null;
-    return { platform: "linkedin", idx, item, title: item.subject };
-  };
   return (
     <div className="min-h-screen bg-background">
-      {/* Hero */}
-      <section className="min-h-screen flex items-center justify-center px-4 py-20">
-        <div className="max-w-2xl w-full mx-auto text-center space-y-8">
-          <div className="space-y-4 animate-fade-in">
-            <img src={logo} alt="TrafficDuck" className="w-24 h-24 mx-auto" />
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-heading font-bold tracking-tight text-foreground">
-              Find active conversations in your niche — get traffic without an audience.
+      {/* Hero Section */}
+      <section className="relative min-h-screen flex items-center justify-center px-4 py-20">
+        <div className="absolute inset-0 bg-linear-to-b from-primary/5 to-background pointer-events-none" />
+        <div className="max-w-4xl w-full mx-auto text-center space-y-10 relative z-10">
+          <div className="space-y-6 animate-fade-in">
+            <div className="flex justify-center">
+              <img src={logo} alt="TrafficDuck" className="w-28 h-28" />
+            </div>
+            <h1 className="text-4xl md:text-5xl lg:text-7xl font-heading font-bold tracking-tight text-foreground leading-tight">
+              Your Conversation Radar, {" "}
+              <span className="text-primary bg-black px-2 py-1 rounded-md">Find Customers</span> & Join Conversations.
             </h1>
-            <p className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto">
-              TrafficDuck shows you live-feeling Reddit, X, and LinkedIn conversations tailored to your niche.
+            <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+              Stop hunting for leads. TrafficDuck scans Reddit, Instagram, and Twitter daily for conversations about your niche — then delivers them straight to you with engagement insights.
             </p>
           </div>
-          <Button
-            onClick={scrollToForm}
-            className="h-14 px-8 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-lg hover:shadow-xl transition-all"
-          >
-            Get Early Access — Join Waitlist
-          </Button>
-        </div>
-      </section>
-
-      {/* Wizard Form */}
-      <section className="py-16 px-4 bg-muted/30">
-        <div className="max-w-2xl mx-auto">
-          <Card className="border-0 shadow-none bg-transparent">
-            <CardContent className="p-8 space-y-6">
-              <div className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-heading font-bold text-foreground">Tell us your niche</h2>
-                  <span className="text-xs text-muted-foreground">Step {step} of {totalSteps}</span>
-                </div>
-                <Progress value={progressValue} className="h-2" />
-                <p className="text-muted-foreground">We’ll generate a fictional but realistic Distribution Map to validate the flow.</p>
-              </div>
-              <form onSubmit={handleWizardSubmit} className="space-y-5">
-                {step === 1 && (
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-foreground">What do you talk about?</label>
-                    <Input
-                      type="text"
-                      placeholder="e.g., AI content marketing, indie hacking, dev tools"
-                      value={niche}
-                      onChange={(e) => setNiche(e.target.value)}
-                      className="h-12 rounded-xl border-2 border-border px-4 bg-background"
-                    />
-                  </div>
-                )}
-                {step === 2 && (
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-foreground">Who is your audience?</label>
-                    <Input
-                      type="text"
-                      placeholder="e.g., SaaS founders, senior engineers, creators, marketers"
-                      value={audience}
-                      onChange={(e) => setAudience(e.target.value)}
-                      className="h-12 rounded-xl border-2 border-border px-4 bg-background"
-                    />
-                  </div>
-                )}
-                {step === 3 && (
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-foreground">What is your goal?</label>
-                      <Select value={goal} onValueChange={(v: UserGoal) => setGoal(v)}>
-                        <SelectTrigger className="h-12 rounded-xl border-2 border-border bg-background">
-                          <SelectValue placeholder="Select goal" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="traffic">Drive traffic</SelectItem>
-                          <SelectItem value="growth">Spark growth</SelectItem>
-                          <SelectItem value="expertise">Show expertise</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="rounded-xl bg-muted p-4 text-sm text-foreground">
-                      <p><span className="font-semibold">You talk about:</span> {niche || "—"}</p>
-                      <p><span className="font-semibold">Your audience:</span> {audience || "—"}</p>
-                      <p><span className="font-semibold">Goal:</span> {goal}</p>
-                    </div>
-                  </div>
-                )}
-                <div className="flex items-center justify-between gap-3 pt-2">
-                  <Button type="button" variant="secondary" disabled={step === 1} onClick={() => setStep((s) => Math.max(1, s - 1))}>
-                    ← Back
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={isGenerating}
-                    className="h-12 px-6 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-lg hover:shadow-xl transition-all"
-                  >
-                    {step < totalSteps ? "Next" : (isGenerating ? "Generating…" : "Generate Distribution Map")}
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
-
-      {/* Distribution Map Output */}
-      {map && (
-        <section ref={resultsRef} className="py-16 px-4">
-          <div className="max-w-4xl mx-auto space-y-10">
-            <div className="text-center space-y-2">
-              <h2 className="text-3xl md:text-4xl font-heading font-bold text-foreground">Your Distribution Map</h2>
-              <p className="text-muted-foreground">Based on "{niche}" for "{audience}"</p>
-            </div>
-
-            {/* Reddit */}
-            <Card className="border-0 shadow-none bg-transparent">
-              <CardContent className="p-6 space-y-4">
-                <h3 className="text-xl font-semibold text-foreground">Reddit</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {map.reddit.map((item, idx) => (
-                    <div key={idx} className="p-4 rounded-xl bg-muted space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-primary uppercase">Reddit</span>
-                        <span className="text-xs text-muted-foreground">⬆ {item.metrics.upvotes} · 💬 {item.metrics.comments}</span>
-                      </div>
-                      <p className="font-medium text-foreground">{item.title}</p>
-                      <p className="text-sm text-muted-foreground">Subreddit: {item.subreddit}</p>
-                      <p className="text-sm text-foreground">{item.preview}</p>
-                      <p className="text-sm text-primary">{item.relevance}</p>
-                      <a href={item.link} target="_blank" rel="noreferrer" className="text-sm underline underline-offset-4 text-foreground">
-                        Open Conversation →
-                      </a>
-                      <div className="flex flex-wrap gap-2 pt-1">
-                        <Button size="sm" onClick={() => handleGenerateReply("reddit", idx)}>
-                          Generate Reply
-                        </Button>
-                        <Button size="sm" variant="secondary" onClick={() => setOpenEnhanceKey(itemKey("reddit", idx))}>
-                          Enhance My Reply
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Twitter/X */}
-            <Card className="border-0 shadow-none bg-transparent">
-              <CardContent className="p-6 space-y-4">
-                <h3 className="text-xl font-semibold text-foreground">Twitter / X</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {map.twitter.map((item, idx) => (
-                    <div key={idx} className="p-4 rounded-xl bg-muted space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-primary uppercase">Twitter / X</span>
-                        <span className="text-xs text-muted-foreground">❤️ {item.metrics.likes} · 💬 {item.metrics.comments}</span>
-                      </div>
-                      <p className="font-medium text-foreground">{item.title}</p>
-                      <p className="text-sm text-muted-foreground">Creator: {item.creator}</p>
-                      <p className="text-sm text-foreground">{item.preview}</p>
-                      <p className="text-sm text-primary">{item.relevance}</p>
-                      <a href={item.link} target="_blank" rel="noreferrer" className="text-sm underline underline-offset-4 text-foreground">
-                        Open Conversation →
-                      </a>
-                      <div className="flex flex-wrap gap-2 pt-1">
-                        <Button size="sm" onClick={() => handleGenerateReply("twitter", idx)}>
-                          Generate Reply
-                        </Button>
-                        <Button size="sm" variant="secondary" onClick={() => setOpenEnhanceKey(itemKey("twitter", idx))}>
-                          Enhance My Reply
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* LinkedIn */}
-            <Card className="border-0 shadow-none bg-transparent">
-              <CardContent className="p-6 space-y-4">
-                <h3 className="text-xl font-semibold text-foreground">LinkedIn</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {map.linkedin.map((item, idx) => (
-                    <div key={idx} className="p-4 rounded-xl bg-muted space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-primary uppercase">LinkedIn</span>
-                        <span className="text-xs text-muted-foreground">👍 {item.metrics.likes} · 💬 {item.metrics.comments}</span>
-                      </div>
-                      <p className="font-medium text-foreground">{item.subject}</p>
-                      <p className="text-sm text-muted-foreground">Author: {item.author}</p>
-                      <p className="text-sm text-foreground">{item.preview}</p>
-                      <p className="text-sm text-primary">{item.angle}</p>
-                      <a href={item.link} target="_blank" rel="noreferrer" className="text-sm underline underline-offset-4 text-foreground">
-                        Open Conversation →
-                      </a>
-                      <div className="flex flex-wrap gap-2 pt-1">
-                        <Button size="sm" onClick={() => handleGenerateReply("linkedin", idx)}>
-                          Generate Reply
-                        </Button>
-                        <Button size="sm" variant="secondary" onClick={() => setOpenEnhanceKey(itemKey("linkedin", idx))}>
-                          Enhance My Reply
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Button
+              onClick={scrollToWaitlist}
+              size="lg"
+              className="h-14 px-10 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-xl hover:shadow-2xl transition-all text-lg"
+            >
+              Start Your Free Trial
+            </Button>
+            <Button
+              onClick={scrollToPricing}
+              size="lg"
+              variant="outline"
+              className="h-14 px-10 rounded-xl font-semibold text-lg"
+            >
+              See Pricing
+            </Button>
           </div>
-        </section>
-      )}
-
-      {/* Reply Modals */}
-      <Dialog open={!!openGenerateKey} onOpenChange={(open) => { if (!open) setOpenGenerateKey(null); }}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Generated Reply</DialogTitle>
-            <DialogDescription>Use this as a high-engagement starting point.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3">
-            <div className="p-3 rounded-lg bg-muted/50 border border-border whitespace-pre-wrap text-sm text-foreground">
-              {openGenerateKey ? (replyDraftByKey[openGenerateKey] || "Generating...") : ""}
+          <div className="flex items-center justify-center gap-8 pt-6 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <Check className="w-5 h-5 text-primary" />
+              <span>No credit card required</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Check className="w-5 h-5 text-primary" />
+              <span>Daily automated scans</span>
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="secondary" onClick={() => setOpenGenerateKey(null)}>Close</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={!!openEnhanceKey} onOpenChange={(open) => { if (!open) setOpenEnhanceKey(null); }}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Enhance My Reply</DialogTitle>
-            <DialogDescription>Paste your draft; we’ll make it clearer and more compelling.</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3">
-            <Textarea
-              value={openEnhanceKey ? (enhanceInputByKey[openEnhanceKey] || "") : ""}
-              onChange={(e) => {
-                if (!openEnhanceKey) return;
-                setEnhanceInputByKey((prev) => ({ ...prev, [openEnhanceKey]: e.target.value }));
-              }}
-              placeholder="Paste your reply to enhance…"
-              className="min-h-[140px] rounded-xl border-2 border-border bg-background"
-            />
-            {openEnhanceKey && (
-              <Button
-                onClick={() => {
-                  const parsed = parseKey(openEnhanceKey);
-                  if (!parsed) return;
-                  handleEnhanceForItem(parsed.platform, parsed.idx);
-                }}
-              >
-                Enhance
-              </Button>
-            )}
-            {openEnhanceKey && enhanceResultByKey[openEnhanceKey] && (
-              <div className="p-3 rounded-lg bg-muted/50 border border-border whitespace-pre-wrap text-sm text-foreground">
-                {enhanceResultByKey[openEnhanceKey]}
-              </div>
-            )}
-          </div>
-          <DialogFooter>
-            <Button variant="secondary" onClick={() => setOpenEnhanceKey(null)}>Close</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* (D) Example Output Section */}
-      <section className="py-20 px-4">
-        <div className="max-w-2xl mx-auto text-center space-y-8">
-          <h2 className="text-3xl md:text-4xl font-heading font-bold text-foreground">
-            Why this works
-          </h2>
-          <p className="text-muted-foreground">We point you to live-feeling conversations to validate distribution quickly.</p>
-
-          <Card className="border-2 border-border bg-card">
-            <CardContent className="p-6 text-left space-y-2">
-              <p className="text-foreground">• Find relevant threads fast</p>
-              <p className="text-foreground">• Drop helpful replies that get attention</p>
-              <p className="text-foreground">• Iterate with AI to sound clearer and more authoritative</p>
-              <p className="text-muted-foreground italic">No API calls yet — this is a validation build.</p>
-            </CardContent>
-          </Card>
         </div>
       </section>
 
-      {/* Testimonial (before Bottom CTA) */}
-      <section className="py-16 md:py-20 px-4">
+      {/* How It Works Section */}
+      <section className="py-24 px-4 bg-muted/30">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center space-y-4 mb-16">
+            <Badge variant="secondary" className="text-sm px-4 py-1">How It Works</Badge>
+            <h2 className="text-3xl md:text-5xl font-heading font-bold text-foreground">
+              Three Steps to Traffic
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Set it once, get fresh conversations every day
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            <Card className="relative overflow-hidden border-2 hover:border-primary/50 transition-all">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl" />
+              <CardHeader>
+                <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
+                  <Target className="w-7 h-7 text-primary" />
+                </div>
+                <CardTitle className="text-2xl">1. Describe Your Niche</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-muted-foreground leading-relaxed">
+                  Tell us your niche, audience, and problems you solve. We’ll generate intent clusters automatically.
+                </p>
+                <div className="pt-2 space-y-2">
+                  <div className="text-sm font-mono bg-muted/50 px-3 py-2 rounded-lg">
+                    "freelance designers"
+                  </div>
+                  <div className="text-sm font-mono bg-muted/50 px-3 py-2 rounded-lg">
+                    "AI tools for writers"
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="relative overflow-hidden border-2 hover:border-primary/50 transition-all">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl" />
+              <CardHeader>
+                <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
+                  <Radar className="w-7 h-7 text-primary" />
+                </div>
+                <CardTitle className="text-2xl">2. Daily Scanning</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-muted-foreground leading-relaxed">
+                  Every day, TrafficDuck scans Reddit, Instagram, and Twitter for active conversations that match your niche intent clusters.
+                </p>
+                <div className="pt-2">
+                  <div className="flex items-center gap-2 text-sm">
+                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                    <span className="text-muted-foreground">Scanning in progress...</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="relative overflow-hidden border-2 hover:border-primary/50 transition-all">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl" />
+              <CardHeader>
+                <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
+                  <MessageCircle className="w-7 h-7 text-primary" />
+                </div>
+                <CardTitle className="text-2xl">3. Engage & Convert</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-muted-foreground leading-relaxed">
+                  Get conversations with context: why it matters, suggested engagement paths, and timing insights. Reply naturally, build trust, drive traffic.
+                </p>
+                <div className="pt-2 space-y-2">
+                  <Badge variant="outline" className="text-xs">High engagement</Badge>
+                  <Badge variant="outline" className="text-xs">Fresh: 2h ago</Badge>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Value Proposition Section */}
+      <section className="py-24 px-4">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            <div className="space-y-6">
+              <Badge variant="secondary" className="text-sm px-4 py-1">Why TrafficDuck</Badge>
+              <h2 className="text-3xl md:text-5xl font-heading font-bold text-foreground leading-tight">
+                Stop Chasing Traffic. Let Conversations Find You.
+              </h2>
+              <p className="text-lg text-muted-foreground leading-relaxed">
+                Most founders waste hours hunting for places to share their content. TrafficDuck automates the hunt — so you can focus on what matters: building relationships and converting leads.
+              </p>
+              <div className="space-y-4 pt-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-1">
+                    <Check className="w-4 h-4 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-foreground mb-1">Save 10+ Hours Per Week</h3>
+                    <p className="text-muted-foreground">No more manual searching across platforms. Get curated conversations delivered daily.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-1">
+                    <Check className="w-4 h-4 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-foreground mb-1">Higher Quality Engagement</h3>
+                    <p className="text-muted-foreground">Context analysis helps you reply meaningfully — not spam. Build real connections.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-1">
+                    <Check className="w-4 h-4 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-foreground mb-1">Turn Conversations Into Customers</h3>
+                    <p className="text-muted-foreground">Every conversation is a warm lead. Join early, provide value, drive traffic to your content.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <Card className="p-6 text-center border-2">
+                <TrendingUp className="w-10 h-10 text-primary mx-auto mb-3" />
+                <div className="text-3xl font-bold text-foreground mb-1">10-15</div>
+                <div className="text-sm text-muted-foreground">Conversations/week</div>
+              </Card>
+              <Card className="p-6 text-center border-2">
+                <Users className="w-10 h-10 text-primary mx-auto mb-3" />
+                <div className="text-3xl font-bold text-foreground mb-1">2</div>
+                <div className="text-sm text-muted-foreground">Platforms scanned</div>
+              </Card>
+              <Card className="p-6 text-center border-2">
+                <Zap className="w-10 h-10 text-primary mx-auto mb-3" />
+                <div className="text-3xl font-bold text-foreground mb-1">Daily</div>
+                <div className="text-sm text-muted-foreground">Fresh scans</div>
+              </Card>
+              <Card className="p-6 text-center border-2">
+                <Search className="w-10 h-10 text-primary mx-auto mb-3" />
+                <div className="text-3xl font-bold text-foreground mb-1">Real-time</div>
+                <div className="text-sm text-muted-foreground">Pro tier updates</div>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section id="pricing" className="py-24 px-4 bg-muted/30">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center space-y-4 mb-6">
+            <Badge variant="secondary" className="text-sm px-4 py-1">Pricing</Badge>
+            <h2 className="text-3xl md:text-5xl font-heading font-bold text-foreground">
+              Simple, Transparent Pricing
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Start free, upgrade when you're ready to scale
+            </p>
+          </div>
+          <p className="text-sm text-center text-muted-foreground mb-10">
+            Founding users get locked-in pricing as TrafficDuck evolves.
+          </p>
+
+          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            {/* Free Tier */}
+            <Card className="relative border-2 hover:shadow-lg transition-all">
+              <CardHeader className="text-center pb-8">
+                <div className="mb-4">
+                  <h3 className="text-2xl font-bold text-foreground mb-2">Free</h3>
+                  <p className="text-sm text-muted-foreground">Try the signal</p>
+                </div>
+                <div className="mb-4">
+                  <span className="text-5xl font-bold text-foreground">$0</span>
+                </div>
+                <Button variant="outline" className="w-full" onClick={scrollToWaitlist}>
+                  Get Started
+                </Button>
+              </CardHeader>
+
+              <CardContent className="space-y-4">
+                <Feature>1 monitor</Feature>
+                <Feature>Manual scans only</Feature>
+                <Feature>Platforms: Reddit + Hacker News</Feature>
+                <Feature>1–2 posts total</Feature>
+                <Feature>No saved history</Feature>
+
+                <div className="pt-4 border-t">
+                  <p className="text-xs text-muted-foreground">
+                    Prove there’s signal before automating.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Early Tier */}
+            <Card className="relative border-4 border-primary hover:shadow-2xl transition-all transform md:scale-105">
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                <Badge className="bg-primary text-primary-foreground px-6 py-1 text-sm font-semibold">
+                  Most Popular
+                </Badge>
+              </div>
+
+              <CardHeader className="text-center pb-8 pt-8">
+                <div className="mb-4">
+                  <h3 className="text-2xl font-bold text-foreground mb-2">Early</h3>
+                  <p className="text-sm text-muted-foreground">Daily signal</p>
+                </div>
+                <div className="mb-4">
+                  <span className="text-5xl font-bold text-foreground">$9</span>
+                  <span className="text-muted-foreground">/month</span>
+                </div>
+                <Button
+                  className="w-full bg-primary hover:bg-primary/90"
+                  onClick={() => startCheckout(priceEarly)}
+                  disabled={loadingPrice === priceEarly}
+                >
+                  {loadingPrice === priceEarly ? "Redirecting..." : "Start Daily Scans"}
+                </Button>
+              </CardHeader>
+
+              <CardContent className="space-y-4">
+                <Feature>1 monitor</Feature>
+                <Feature>Daily scans</Feature>
+                <Feature>Platforms: Reddit + Hacker News</Feature>
+                <Feature>2–3 posts per day</Feature>
+                <Feature>30-day saved history</Feature>
+
+                <div className="pt-4 border-t">
+                  <p className="text-xs text-primary font-semibold">
+                    Best for early validation
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Builder Tier */}
+            <Card className="relative border-2 hover:shadow-lg transition-all">
+              <CardHeader className="text-center pb-8">
+                <div className="mb-4">
+                  <h3 className="text-2xl font-bold text-foreground mb-2">Builder</h3>
+                  <p className="text-sm text-muted-foreground">Full reach</p>
+                </div>
+                <div className="mb-4">
+                  <span className="text-5xl font-bold text-foreground">$19</span>
+                  <span className="text-muted-foreground">/month</span>
+                </div>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => startCheckout(priceBuilder)}
+                  disabled={loadingPrice === priceBuilder}
+                >
+                  {loadingPrice === priceBuilder ? "Redirecting..." : "Unlock All Platforms"}
+                </Button>
+              </CardHeader>
+
+              <CardContent className="space-y-4">
+                <Feature>Up to 3 monitors</Feature>
+                <Feature>Daily scans</Feature>
+                <Feature>All platforms (X, Reddit, Hacker News)</Feature>
+                <Feature>5–7 posts per day</Feature>
+                <Feature>60–90 day saved history</Feature>
+
+                <div className="pt-4 border-t">
+                  <p className="text-xs text-muted-foreground">
+                    Built for serious builders and operators
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+        </div>
+      </section>
+
+      {/* Testimonial */}
+      <section className="py-24 px-4">
         <div className="max-w-3xl mx-auto">
-          <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-background shadow-xl">
+          <Card className="border-2 border-primary/20 bg-linear-to-br from-primary/5 to-background shadow-xl">
             <CardContent className="p-8 md:p-12 text-center space-y-6">
-              {/* Quote icon */}
               <div className="flex justify-center">
                 <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
                   <span className="text-3xl text-primary font-serif">"</span>
                 </div>
               </div>
-              
-              {/* Quote text */}
               <blockquote className="text-xl md:text-2xl lg:text-3xl font-heading tracking-tight text-foreground leading-relaxed">
                 "The tweets you linked are on point — if your tool can perfectly find enough of these daily{" "}
                 <span className="text-primary font-semibold">I would gladly pay.</span>"
               </blockquote>
-              
-              {/* Attribution */}
               <div className="flex items-center justify-center gap-3 pt-4">
-                <img 
-                  src={takaraAvatar} 
-                  alt="Takara Qode" 
+                <img
+                  src={takaraAvatar}
+                  alt="Takara Qode"
                   className="h-12 w-12 rounded-full object-cover border-2 border-primary/30"
                 />
                 <div className="text-left">
                   <p className="font-semibold text-foreground">Takara Qode</p>
-                  <a 
-                    href="https://twitter.com/takaraqode" 
-                    target="_blank" 
+                  <a
+                    href="https://twitter.com/takaraqode"
+                    target="_blank"
                     rel="noopener noreferrer"
                     className="text-sm text-primary hover:underline"
                   >
@@ -751,103 +443,47 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* (F) Bottom CTA Section */}
-      <section ref={formRef} className="py-20 px-4">
-        <div className="max-w-lg mx-auto text-center space-y-6">
-          <h2 className="text-3xl md:text-4xl font-heading font-bold text-foreground">
-            Get your free distribution audit
-          </h2>
-          <p className="text-muted-foreground">
-            Share your website and we'll send you personalized community recommendations.
-          </p>
-          <form
-            name="waitlist-intent"
-            method="POST"
-            data-netlify="true"
-            netlify-honeypot="bot-field"
-            onSubmit={handleIntentSubmit}
-            className="space-y-4"
-          >
-            <input type="hidden" name="form-name" value="waitlist-intent" />
-            <input type="text" name="bot-field" className="hidden" />
-            <input type="hidden" name="platforms" value={intentPlatforms.join(",")} />
-            <div className="space-y-2 text-left">
-              <label className="text-sm font-medium text-foreground">Your website URL</label>
-              <Input
-                type="url"
-                name="url"
-                placeholder="https://yoursite.com"
-                value={intentUrl}
-                onChange={(e) => setIntentUrl(e.target.value)}
-                className="h-12 rounded-xl border-2 border-border bg-background"
-                required
-              />
-            </div>
-            <div className="space-y-2 text-left">
-              <label className="text-sm font-medium text-foreground">Your email</label>
-              <Input
-                type="email"
-                name="email"
-                placeholder="you@example.com"
-                value={intentEmail}
-                onChange={(e) => setIntentEmail(e.target.value)}
-                className="h-12 rounded-xl border-2 border-border bg-background"
-                required
-              />
-            </div>
-            <div className="space-y-2 text-left">
-              <label className="text-sm font-medium text-foreground">Where do you want traffic from?</label>
-              <div className="flex flex-wrap gap-4 pt-1">
-                {["Twitter / X", "Reddit", "LinkedIn"].map((label) => {
-                  const value = label.toLowerCase().includes("twitter") ? "twitter" : label.toLowerCase();
-                  const checked = intentPlatforms.includes(value);
-                  return (
-                    <label key={value} className="flex items-center gap-2 text-sm text-foreground cursor-pointer">
-                      <Checkbox
-                        checked={checked}
-                        onCheckedChange={(v) => {
-                          const isChecked = v === true;
-                          setIntentPlatforms((prev) =>
-                            isChecked ? [...new Set([...prev, value])] : prev.filter((p) => p !== value)
-                          );
-                        }}
-                      />
-                      {label}
-                    </label>
-                  );
-                })}
-              </div>
-            </div>
-            <Button
-              type="submit"
-              disabled={isSubmittingIntent}
-              className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-lg hover:shadow-xl transition-all"
-            >
-              {isSubmittingIntent ? "Submitting…" : "Get My Free Audit"}
-            </Button>
-            <div className="bg-primary/10 border border-primary/30 rounded-lg p-3">
-              <p className="text-sm font-medium text-primary">
-                🎁 Early sign-ups get FREE weekly audits until the MVP is live
-              </p>
-            </div>
-          </form>
+      {/* Waitlist CTA */}
+      <section id="waitlist" className="py-24 px-4 bg-muted/30">
+        <div className="max-w-xl mx-auto text-center space-y-8">
+          <div className="space-y-4">
+            <Badge variant="secondary" className="text-sm px-4 py-1">Join the Waitlist</Badge>
+            <h2 className="text-3xl md:text-5xl font-heading font-bold text-foreground">
+              Start Finding Your Customers Today
+            </h2>
+            <p className="text-lg text-muted-foreground">
+              Join the and get your first radar scan free. No credit card required.
+            </p>
+          </div>
+
+          <Link href="/sign-up">
+            <Button className="w-full bg-black text-white">Get Started Today</Button>
+          </Link>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="py-8 px-4 border-t border-border">
-        <div className="max-w-2xl mx-auto text-center">
-          <p className="text-sm text-muted-foreground">
-            Questions or support?{" "}
-            <a
-              href="https://x.com/heynathanielj"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary hover:underline font-medium"
-            >
-              DM me on X @heynathanielj
-            </a>
-          </p>
+      <footer className="py-12 px-4 border-t border-border">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-3">
+              <img src={logo} alt="TrafficDuck" className="w-10 h-10" />
+              <span className="font-bold text-lg text-foreground">TrafficDuck</span>
+            </div>
+            <div className="text-center md:text-right">
+              <p className="text-sm text-muted-foreground mb-2">
+                Questions or support?
+              </p>
+              <a
+                href="https://x.com/heynathanielj"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary hover:underline font-medium"
+              >
+                DM me on X @heynathanielj
+              </a>
+            </div>
+          </div>
         </div>
       </footer>
     </div>
