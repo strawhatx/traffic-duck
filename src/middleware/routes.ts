@@ -6,7 +6,7 @@ const PUBLIC_ROUTE_PATTERNS: RegExp[] = [
   /^\/$/,
   /^\/sign-in(.*)/,
   /^\/sign-up(.*)/,
-  /^\/auth\/callback(.*)/,
+  /\/auth\/callback(.*)/,
   // Public assets
   /^\/favicon\.ico$/,
   /^\/robots\.txt$/,
@@ -20,11 +20,8 @@ function isPublicRoute(pathname: string): boolean {
 }
 
 function shouldNoIndex(pathname: string): boolean {
-  return (
-    pathname.startsWith("/auth") ||
-    pathname.startsWith("/sign-in") ||
-    pathname.startsWith("/sign-up")
-  );
+  // Match /auth, /sign-in, /sign-up and localized variants like /en/auth or /fr/sign-in
+  return /^(?:\/[^\/]+)?\/(?:auth|sign-in|sign-up)(?:\/|$)/.test(pathname);
 }
 
 export async function middleware(req: NextRequest) {
