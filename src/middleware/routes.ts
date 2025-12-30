@@ -6,6 +6,7 @@ const PUBLIC_ROUTE_PATTERNS: RegExp[] = [
   /^\/$/,
   /^\/sign-in(.*)/,
   /^\/sign-up(.*)/,
+  /^\/auth\/callback(.*)/,
   // Public assets
   /^\/favicon\.ico$/,
   /^\/robots\.txt$/,
