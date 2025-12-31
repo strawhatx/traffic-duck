@@ -28,6 +28,11 @@ export async function middleware(req: NextRequest) {
 
   const pathname = req.nextUrl.pathname
 
+  // Allow auth callback and localized variants (e.g. /en/auth/callback)
+  if (pathname.includes('/auth/callback')) {
+    return res
+  }
+
   // Allow public pages
   if (PUBLIC_PATHS.includes(pathname)) {
     return res
