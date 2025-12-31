@@ -69,3 +69,14 @@ export async function middleware(req: NextRequest) {
 
   return response;
 }
+
+/**
+ * 👇 THIS is where matcher goes
+ */
+export const config = {
+  matcher: [
+    "/dashboard/:path*",
+    "/keywords/:path*",
+    "/upgrade",
+  ],
+}
