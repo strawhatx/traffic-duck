@@ -26,6 +26,8 @@ export async function middleware(req: NextRequest) {
     data: { user }
   } = await supabase.auth.getUser()
 
+  console.log('[middleware] user=', user ? 'yes' : 'no')
+
   const pathname = req.nextUrl.pathname
 
   // Allow auth callback and localized variants (e.g. /en/auth/callback)
