@@ -1,78 +1,71 @@
- import { NextResponse } from 'next/server'
- import type { NextRequest } from 'next/server'
- import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
- 
- const PUBLIC_PATHS = [
-   '/',
-   '/login',
-   '/signup',
-   '/sign-in',
-   '/sign-up',
-   '/pricing',
-   '/favicon.ico',
-   '/robots.txt',
-   '/sitemap.xml',
- ]
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { createServerClient } from "@supabase/ssr";
 
 export async function middleware(req: NextRequest) {
-   // Basic debug to confirm middleware runs
-   console.log('[middleware] path=', req.nextUrl.pathname)
- 
-   const res = NextResponse.next()
-   res.headers.set('x-middleware-hit', '1')
-   const supabase = createMiddlewareClient({ req, res })
+  let response = NextResponse.next();
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return req.cookies.get(name)?.value;
+        },
+        set(name: string, value: string, options: any) {
+          response.cookies.set({ name, value, ...options });
+        },
+        remove(name: string, options: any) {
+          response.cookies.set({ name, value: "", ...options });
+        },
+      },
+    }
+  );
 
   const {
-    data: { user }
-  } = await supabase.auth.getUser()
+    data: { session },
+  } = await supabase.auth.getSession();
 
-  console.log('[middleware] user=', user ? 'yes' : 'no')
+  const pathname = req.nextUrl.pathname;
 
-  const pathname = req.nextUrl.pathname
-
-  // Allow auth callback and localized variants (e.g. /en/auth/callback)
-  if (pathname.includes('/auth/callback')) {
-    return res
+  // ✅ Always allow auth callbacks & webhooks
+  if (
+    pathname.startsWith("/auth") ||
+    pathname.startsWith("/api/stripe/webhook")
+  ) {
+    return response;
   }
 
-  // Allow public pages
-  if (PUBLIC_PATHS.includes(pathname)) {
-    return res
+  // ✅ Public routes
+  if (
+    pathname === "/" ||
+    pathname === "/sign-in" ||
+    pathname === "/sign-up" ||
+    pathname === "/pricing"
+  ) {
+    return response;
   }
 
-  // Allow Stripe webhook
-   if (pathname.startsWith('/api/stripe/webhook')) {
-    return res
+  // 🔒 Auth gate
+  if (!session) {
+    const loginUrl = new URL("/sign-in", req.url);
+    loginUrl.searchParams.set("redirectTo", pathname);
+    return NextResponse.redirect(loginUrl);
   }
 
-  // ❌ Not logged in → login
-  if (!user) {
-    const loginUrl = new URL('/sign-in', req.url)
-    loginUrl.searchParams.set('redirectTo', pathname)
-    return NextResponse.redirect(loginUrl)
+  // 🧱 Subscription gate (ONLY where needed)
+  if (pathname.startsWith("/keywords")) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("subscription_status")
+      .eq("id", session.user.id)
+      .maybeSingle();
+
+    if (!profile || profile.subscription_status !== "active") {
+      return NextResponse.redirect(new URL("/upgrade", req.url));
+    }
   }
 
-  // Check subscription
-   // Optional: subscription gating (robust against missing table)
-   try {
-     const { data: profile } = await supabase
-       .from('profiles').select('subscription_status, price_id')
-       .eq('id', user.id).maybeSingle()
-     // Example gate: force billing page for users without active/trialing subscription
-     if (!profile || (profile.subscription_status !== 'active' && profile.subscription_status !== 'trialing')) {
-       // Allow public pages and auth pages; otherwise redirect to pricing
-       if (!PUBLIC_PATHS.includes(pathname)) {
-         return NextResponse.redirect(new URL('/pricing', req.url))
-       }
-     }
-   } catch {
-     // ignore subscription errors in middleware to avoid locking users out
-   }
-
-  // ✅ All good
-   return res
+  return response;
 }
-
- export const config = {
-   matcher: ['/((?!.+\\.[\\w]+$|_next).*)', '/', '/(api|trpc)(.*)'],
- }
