@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Check, Search, Zap, Target, TrendingUp, Users, MessageCircle, Radar } from "lucide-react";
+import { Check, Search, Zap, Target, TrendingUp, Users, MessageCircle, Radar, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabaseClient";
 import Link from "next/link";
@@ -108,6 +108,139 @@ const LandingPage = () => {
               <Check className="w-5 h-5 text-primary" />
               <span>Daily automated scans</span>
             </div>
+          </div>
+        </div>
+      </section>
+
+
+      {/* Difference Section */}
+      <section className="py-24 px-4">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center space-y-4 mb-16">
+            <Badge variant="secondary" className="text-sm px-4 py-1">The Traffic Duck difference</Badge>
+            <h2 className="text-3xl md:text-5xl font-heading font-bold text-foreground">
+              Compare finding demand manually vs. seeing it clearly with Traffic Duck.
+            </h2>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8">
+            {/* Growing with Traffic Duck */}
+            <Card className="relative overflow-hidden border-2 border-blue-200 bg-blue-50 dark:bg-blue-950/20">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-blue-200/20 rounded-full blur-3xl" />
+              <CardHeader className="pb-4">
+                <CardTitle className="text-2xl">Growing with Traffic Duck</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div>
+                  <div className="text-sm font-semibold text-foreground mb-1">You (5 min setup)</div>
+                  <p className="text-sm text-muted-foreground">
+                    Sign up, add keywords you want to monitor.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="text-sm font-semibold text-foreground">Traffic Duck</div>
+                  <ul className="text-sm text-muted-foreground space-y-2">
+                    <li className="flex items-start gap-2">
+                      <Check className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                      <span>Scans X, Hackernews and Reddit to surface conversations where people are <span className="text-foreground">asking for tools</span></span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Check className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                      <span>Spotlights people <span className="text-foreground">complaining about problems</span></span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Check className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                      <span>Finds threads <span className="text-foreground">comparing alternatives</span></span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div>
+                  <div className="text-sm font-semibold text-foreground mb-1">Traffic Duck (signal filtering)</div>
+                  <p className="text-sm text-muted-foreground">
+                    Pulls the most recent and relevant posts, organized by keyword and platform.
+                  </p>
+                </div>
+
+                <div>
+                  <div className="text-sm font-semibold text-foreground mb-1">You (focused action)</div>
+                  <p className="text-sm text-muted-foreground">
+                    Review real conversations in one dashboard. Decide where to engage, research, or validate ideas.
+                  </p>
+                </div>
+
+                <div>
+                  <div className="text-sm font-semibold text-foreground mb-1">You (clarity)</div>
+                  <p className="text-sm text-muted-foreground">
+                    See where demand actually exists and what people are saying in their own words.
+                  </p>
+                </div>
+
+                <div className="pt-2 border-t">
+                  <div className="inline-flex items-center gap-2 rounded-md bg-primary/10 px-3 py-2">
+                    <Badge variant="outline" className="text-xs">Result</Badge>
+                    <span className="text-sm text-foreground">
+                      5-minute setup → ongoing visibility into real demand
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Growing on your own */}
+            <Card className="relative overflow-hidden border-2 border-red-200 bg-red-50 dark:bg-red-950/20">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-red-200/20 rounded-full blur-3xl" />
+              <CardHeader className="pb-4">
+                <CardTitle className="text-2xl">Growing on your own</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div>
+                  <div className="text-sm font-semibold text-foreground mb-1">You (constant searching)</div>
+                  <p className="text-sm text-muted-foreground">
+                    Manually search X and Reddit hoping to find relevant posts.
+                  </p>
+                </div>
+
+                <div>
+                  <div className="text-sm font-semibold text-foreground mb-1">You (manual filtering)</div>
+                  <p className="text-sm text-muted-foreground">
+                    Scroll through dozens of low-signal posts to find anything useful.
+                  </p>
+                </div>
+
+                <div>
+                  <div className="text-sm font-semibold text-foreground mb-1">You (context switching)</div>
+                  <p className="text-sm text-muted-foreground">
+                    Jump between platforms, tabs, and bookmarks.
+                  </p>
+                </div>
+
+                <div>
+                  <div className="text-sm font-semibold text-foreground mb-1">You (guessing)</div>
+                  <p className="text-sm text-muted-foreground">
+                    Rely on assumptions instead of real user language.
+                  </p>
+                </div>
+
+                <div className="pt-2 border-t">
+                  <div className="space-y-2">
+                    <div className="flex items-start gap-2 text-sm">
+                      <X className="w-4 h-4 text-destructive mt-0.5 shrink-0" />
+                      <span className="text-foreground">2–3 hours per day</span>
+                    </div>
+                    <div className="flex items-start gap-2 text-sm">
+                      <X className="w-4 h-4 text-destructive mt-0.5 shrink-0" />
+                      <span className="text-foreground">Inconsistent signal</span>
+                    </div>
+                    <div className="flex items-start gap-2 text-sm">
+                      <X className="w-4 h-4 text-destructive mt-0.5 shrink-0" />
+                      <span className="text-foreground">High burnout</span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>

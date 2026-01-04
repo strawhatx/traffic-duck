@@ -185,18 +185,17 @@ async function runPlatformJob(params: {
 }
 
 export async function POST(req: NextRequest) {
-  const secret = req.headers.get("x-cron-secret");
-  if (!process.env.CRON_SECRET || secret !== process.env.CRON_SECRET) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   try {
+
+    const { data } = await req.json()
+
     // Load active keywords for all users
     const { data: allKeywords, error: kErr } = await supabaseAdmin
       .from("keywords")
       .select("id, user_id, keyword, platform, active")
-      .eq("active", true);
-    if (kErr) return NextResponse.json({ error: "Failed to load keywords" }, { status: 500 });
+      .eq("user_id", data.userId);
+    
+      if (kErr) return NextResponse.json({ error: "Failed to load keywords" }, { status: 500 });
 
     const userIdToKeywords = new Map<string, UserKeyword[]>();
     for (const row of (allKeywords as Array<{ id: string; user_id: string; keyword: string; platform: unknown }> | null) ?? []) {

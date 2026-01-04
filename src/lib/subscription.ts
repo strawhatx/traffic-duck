@@ -31,12 +31,12 @@ export function getPlanLimits(tier: SubscriptionTier): PlanLimits {
       };
     case "early":
       return {
-        maxKeywords: 1,
+        maxKeywords: 3,
         maxWeeklyResultsPerKeyword: 10,
       };
     case "builder":
       return {
-        maxKeywords: 3,
+        maxKeywords: 10,
         maxWeeklyResultsPerKeyword: 25,
         maxLifetimeResults: "unlimited",
       };
