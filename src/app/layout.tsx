@@ -18,11 +18,11 @@ const poppins = Poppins({
 export const metadata: Metadata = {
   title: "TrafficDuck — Find where your customers are talking",
   description:
-    "TrafficDuck finds the conversations your customers are having on Reddit, X, and LinkedIn—so you can join in, get traffic, and validate demand.",
+    "TrafficDuck finds the conversations your customers are having on Reddit, X, and Hacker News — so you can join in, get traffic, and validate demand.",
   openGraph: {
     title: "TrafficDuck — Find where your customers are talking",
     description:
-      "TrafficDuck finds the conversations your customers are having on Reddit, X, and LinkedIn—so you can join in, get traffic, and validate demand.",
+      "TrafficDuck finds the conversations your customers are having on Reddit, X, and Hacker News — so you can join in, get traffic, and validate demand.",
     images: ["/duck-og.jpeg"],
     type: "website",
     siteName: "TrafficDuck",
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "TrafficDuck — Find where your customers are talking",
     description:
-      "TrafficDuck finds the conversations your customers are having on Reddit, X, and LinkedIn—so you can join in, get traffic, and validate demand.",
+      "TrafficDuck finds the conversations your customers are having on Reddit, X, and Hacker News — so you can join in, get traffic, and validate demand.",
     images: ["/duck-og.jpeg"],
     creator: "@trafficduck",
   },

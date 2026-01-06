@@ -9,12 +9,9 @@ import { useRouter } from "next/navigation";
 
 export default function SignInPage() {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
-  const router = useRouter();
-  const isDev = process.env.NODE_ENV !== "production";
 
   const handleMagicLink = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,23 +33,6 @@ export default function SignInPage() {
       return;
     }
     setMessage("Magic link sent. Check your email to continue.");
-  };
-
-  const handlePasswordSignIn = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setMessage(null);
-    setLoading(true);
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    setLoading(false);
-    if (signInError) {
-      setError(signInError.message);
-      return;
-    }
-    router.push("/dashboard");
   };
 
   return (
@@ -100,34 +80,7 @@ export default function SignInPage() {
             {loading ? "Sending link..." : "Send magic link"}
           </Button>
         </form>
-        {isDev && (
-          <>
-            <div className="my-4 text-center text-sm text-slate-500">or (dev)</div>
-            <form onSubmit={handlePasswordSignIn} className="space-y-4">
-              <div>
-                <label className="text-sm block mb-1">Email</label>
-                <Input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-              <div>
-                <label className="text-sm block mb-1">Password</label>
-                <Input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              </div>
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Signing in..." : "Sign in with email"}
-              </Button>
-            </form>
-          </>
-        )}
+
         <p className="text-sm text-slate-600 mt-4">
           Don&apos;t have an account?{" "}
           <Link href="/sign-up" className="text-blue-600 underline">

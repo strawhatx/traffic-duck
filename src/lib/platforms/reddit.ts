@@ -1,6 +1,18 @@
 import "server-only";
 import { PlatformResult } from "./types";
 
+type RedditChildData = {
+  created_utc?: number;
+  title?: string;
+  selftext?: string;
+  author?: string;
+  permalink?: string;
+  url?: string;
+  ups?: number;
+  num_comments?: number;
+  subreddit?: string;
+};
+
 export async function searchReddit(query: string, limit: number = 25): Promise<PlatformResult[]> {
   // Use public Reddit search JSON endpoint; no auth required
   // Wrap multi-word queries in quotes to enforce exact phrase matching
@@ -14,11 +26,14 @@ export async function searchReddit(query: string, limit: number = 25): Promise<P
   try {
     const res = await fetch(url, { headers: { "User-Agent": "TrafficDuckBot/1.0" } });
     if (!res.ok) return [];
-    const data = await res.json() as Record<string, unknown>;
+    const data = (await res.json()) as Record<string, unknown>;
     const dataObj = data?.data as Record<string, unknown> | undefined;
-    const children = Array.isArray(dataObj?.children) ? dataObj.children : [];
-    return children.map((c: Record<string, unknown>): PlatformResult => {
-      const d = c?.data ?? {};
+    const children = Array.isArray(dataObj?.children)
+      ? (dataObj.children as Array<{ data?: RedditChildData }>)
+      : [];
+      
+    return children.map((c): PlatformResult => {
+      const d: RedditChildData = c?.data ?? {};
       const createdUtc = typeof d.created_utc === "number" ? d.created_utc : undefined;
       const createdIso = createdUtc ? new Date(createdUtc * 1000).toISOString() : undefined;
       return {

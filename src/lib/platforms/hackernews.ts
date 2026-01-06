@@ -26,14 +26,17 @@ export async function searchHackerNews(
 
     return hits.slice(0, limit).map((h: Record<string, unknown>): PlatformResult => ({
       platform: "hackernews",
-      title: h?.title || "Hacker News story",
-      content: h?.title || "",
-      author: h?.author || "hn",
-      url: h?.url || `https://news.ycombinator.com/item?id=${h?.objectID}`,
+      title: typeof h?.title === "string" ? h.title : "Hacker News story",
+      content: typeof h?.title === "string" ? h.title : "",
+      author: typeof h?.author === "string" ? h.author : "hn",
+      url:
+        typeof h?.url === "string"
+          ? h.url
+          : `https://news.ycombinator.com/item?id=${String((h as Record<string, unknown>)?.objectID ?? "")}`,
       engagement: {
         likes: Number(h?.points ?? 0),
         comments: Number(h?.num_comments ?? 0),
-        created_at: h?.created_at || undefined,
+        created_at: typeof h?.created_at === "string" ? h.created_at : undefined,
       },
     }));
   } catch {
